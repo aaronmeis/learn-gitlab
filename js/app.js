@@ -164,6 +164,16 @@
           <button class="btn btn-sm" onclick="window.EnhanceEngine.resetDrill()">Reset Drill</button>
         </div>
 
+        <div class="drill-help card" style="padding:.85rem 1rem;margin:1rem 0;border:1px dashed var(--border-highlight);background:var(--bg-surface);">
+          <div style="font-weight:700;color:var(--text-primary);margin-bottom:.35rem;">How to place</div>
+          <ol style="margin:0;padding-inline-start:1.2rem;color:var(--text-secondary);font-size:.88rem;line-height:1.55;">
+            <li><b>Click a chip</b> in the pool so it highlights.</li>
+            <li><b>Click a bucket</b> (Control Plane, Job Plane, or External) to drop it there.</li>
+            <li>Green edge = correct. Red edge = wrong — click the chip again to pull it back, then retry.</li>
+            <li>Use <b>Reset Drill</b> to clear all six and start over.</li>
+          </ol>
+        </div>
+
         <div class="drill-item-pool" id="drill-pool">
           <!-- Rendered by EnhanceEngine -->
         </div>
@@ -202,47 +212,50 @@
       <div>
         <h1 class="page-title">Curriculum: 8-Block Mastery Day</h1>
         <p class="page-subtitle">
-          The rigorous 7-hour architectural path from scope through conceptual, logical, and physical views, lab verification, failure modes, and teach-back.
+          The rigorous 7-hour architectural path from scope through conceptual, logical, and physical views, lab verification, failure modes, and teach-back. Open a block to see objectives and modules.
         </p>
 
         <div class="block-list">
           ${data.blocks.map(b => `
-            <div class="block-card" id="block-${b.n}">
-              <div class="block-top">
+            <details class="block-card block-details" id="block-${b.n}" ${b.n === 1 ? 'open' : ''}>
+              <summary class="block-top block-summary">
                 <div class="block-title-box">
                   <div class="block-num">${b.n}</div>
                   <div class="block-title">${b.title}</div>
                 </div>
                 <div class="block-meta">
-                  <span class="tag-badge">⏱ ${b.time}</span>
+                  <span class="tag-badge tag-time">⏱ ${b.time}</span>
                   <span class="rung-badge rung-${b.rungs.split('-')[0]}">Rung ${b.rungs}</span>
+                  <span class="block-chevron" aria-hidden="true">▾</span>
+                </div>
+              </summary>
+              <div class="block-body">
+                <p class="block-opener">${b.opener}</p>
+                
+                <div style="background:var(--bg-surface);border:1px solid var(--border-muted);padding:.85rem 1rem;border-radius:var(--radius-sm);font-size:.82rem;margin-bottom:1rem;">
+                  <div style="font-weight:700;color:var(--text-primary);margin-bottom:2px;">🎯 Target Objective:</div>
+                  <div style="color:var(--text-secondary);">${b.obj}</div>
+                  <div style="font-weight:700;color:var(--accent-gitlab);margin-top:6px;">📦 Deliverable: <span style="font-weight:400;color:var(--text-primary);">${b.deliv}</span></div>
+                </div>
+
+                <div class="block-modules">
+                  ${b.mods.map((m, idx) => {
+                    const modKey = `b${b.n}_m${idx}`;
+                    const isChecked = !!AppState.checkedModules[modKey];
+                    return `
+                      <div class="mod-item">
+                        <input type="checkbox" class="mod-checkbox" id="${modKey}" data-key="${modKey}" ${isChecked ? 'checked' : ''} onchange="window.AppEngine.toggleModule('${modKey}')">
+                        <div class="mod-desc">
+                          <label for="${modKey}" class="mod-name" style="cursor:pointer;">${m.t}</label>
+                          <div style="color:var(--text-secondary);font-size:.82rem;margin-top:2px;">👉 <b>Action:</b> ${m.action}</div>
+                          <div class="mod-why">💡 <b>Why it matters:</b> ${m.whyMatters}</div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
               </div>
-              <p class="block-opener">${b.opener}</p>
-              
-              <div style="background:var(--bg-surface);border:1px solid var(--border-muted);padding:.85rem 1rem;border-radius:var(--radius-sm);font-size:.82rem;margin-bottom:1rem;">
-                <div style="font-weight:700;color:var(--text-primary);margin-bottom:2px;">🎯 Target Objective:</div>
-                <div style="color:var(--text-secondary);">${b.obj}</div>
-                <div style="font-weight:700;color:var(--accent-gitlab);margin-top:6px;">📦 Deliverable: <span style="font-weight:400;color:var(--text-primary);">${b.deliv}</span></div>
-              </div>
-
-              <div class="block-modules">
-                ${b.mods.map((m, idx) => {
-                  const modKey = `b${b.n}_m${idx}`;
-                  const isChecked = !!AppState.checkedModules[modKey];
-                  return `
-                    <div class="mod-item">
-                      <input type="checkbox" class="mod-checkbox" id="${modKey}" data-key="${modKey}" ${isChecked ? 'checked' : ''} onchange="window.AppEngine.toggleModule('${modKey}')">
-                      <div class="mod-desc">
-                        <label for="${modKey}" class="mod-name" style="cursor:pointer;">${m.t}</label>
-                        <div style="color:var(--text-secondary);font-size:.82rem;margin-top:2px;">👉 <b>Action:</b> ${m.action}</div>
-                        <div class="mod-why">💡 <b>Why it matters:</b> ${m.whyMatters}</div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </div>
+            </details>
           `).join('')}
         </div>
       </div>
@@ -314,22 +327,22 @@
           </div>
 
           <div class="diagram-grid">
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[0]}', 'Logical Data Model & ERD')">
+            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[0]}', 'Logical request path (SV-1)')">
               <div class="diagram-img-box">
-                <img src="${v.logical.diagrams[0]}" alt="Logical Data Model">
+                <img src="${v.logical.diagrams[0]}" alt="Logical request path">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Logical Data Model (ERD)</div>
-                <div class="diagram-card-desc">Project, MR, Pipeline, Job, and Findings hierarchy</div>
+                <div class="diagram-card-title">Logical request path</div>
+                <div class="diagram-card-desc">Front door → Rails → Sidekiq → Postgres → Gitaly → Runner</div>
               </div>
             </div>
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[1]}', 'Control Plane vs Job Plane Data Flow')">
+            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[1]}', 'Physical placement (Dedicated for Government)')">
               <div class="diagram-img-box">
-                <img src="${v.logical.diagrams[1]}" alt="Control vs Job Plane">
+                <img src="${v.logical.diagrams[1]}" alt="Physical placement">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Control vs Job Plane Flow</div>
-                <div class="diagram-card-desc">Front doors, Workhorse, Rails, Sidekiq, Git RPC, and Workers</div>
+                <div class="diagram-card-title">Where it lands (physical)</div>
+                <div class="diagram-card-desc">Tenant vs outside: IdP, FIPS runners, self-hosted AI Gateway</div>
               </div>
             </div>
           </div>
@@ -406,22 +419,22 @@
           </div>
 
           <div class="diagram-grid">
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[0]}', 'Platform Boundary and External Neighbors')">
+            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[0]}', 'GitLab Duo AI dual path')">
               <div class="diagram-img-box">
-                <img src="${v.integration.diagrams[0]}" alt="Platform Boundary">
+                <img src="${v.integration.diagrams[0]}" alt="Duo AI dual path">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Platform Boundary & Neighbors</div>
-                <div class="diagram-card-desc">IdP, Runners, K8s (KAS), and FedRAMP ConMon</div>
+                <div class="diagram-card-title">Dual AI data paths</div>
+                <div class="diagram-card-desc">Self-hosted (authorized) vs commercial gateway (blocked on Gov)</div>
               </div>
             </div>
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[1]}', 'GitLab Duo AI Data Paths')">
+            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[1]}', 'Trust domains (conceptual)')">
               <div class="diagram-img-box">
-                <img src="${v.integration.diagrams[1]}" alt="GitLab Duo AI Data Path">
+                <img src="${v.integration.diagrams[1]}" alt="Trust domains">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Dual AI Data Paths</div>
-                <div class="diagram-card-desc">GitLab-Managed Cloud AI Gateway vs Self-Hosted Gateway</div>
+                <div class="diagram-card-title">Trust domains around the platform</div>
+                <div class="diagram-card-desc">Control plane · job plane · unauthorized egress</div>
               </div>
             </div>
           </div>
@@ -517,52 +530,36 @@
     }
 
     const current = chapters[activeLibraryChapter] || chapters[0];
-
-    function formatMarkdown(text) {
-      if (!text) return '';
-      let html = text
-        .replace(/^### (.*$)/gim, '<h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin:1.4rem 0 .4rem;">$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2 style="font-size:1.35rem;font-weight:800;color:var(--text-primary);margin:1.8rem 0 .6rem;border-bottom:1px solid var(--border-muted);padding-bottom:.4rem;">$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1 style="font-size:1.6rem;font-weight:800;color:var(--text-primary);margin-bottom:.75rem;">$1</h1>')
-        .replace(/\*\*(.*?)\*\*/gim, '<strong style="color:var(--text-primary);">$1</strong>')
-        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-        .replace(/`([^`]+)`/gim, '<code style="background:var(--bg-canvas);border:1px solid var(--border-default);padding:2px 5px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem;">$1</code>')
-        .replace(/^\* (.*$)/gim, '<li style="margin-left:1.5rem;color:var(--text-secondary);font-size:.9rem;line-height:1.6;">$1</li>')
-        .replace(/^\- (.*$)/gim, '<li style="margin-left:1.5rem;color:var(--text-secondary);font-size:.9rem;line-height:1.6;">$1</li>')
-        .replace(/\n\n/gim, '<br><br>');
-      return html;
-    }
+    const src = current.html || '';
 
     return `
       <div>
         <h1 class="page-title">Architecture Deep Dive Library</h1>
         <p class="page-subtitle">
-          Exhaustive specifications, TOGAF/DoDAF crosswalks, security catalogs, and executive briefings generated from the deep-dive research.
+          Full HTML chapters in this window: TOGAF/DoDAF crosswalks, security catalogs, and executive briefings from the deep-dive research.
         </p>
 
-        <div class="lib-grid" style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;margin-top:1.5rem;">
+        <div class="lib-grid" style="display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:1.5rem;align-items:start;margin-top:1.5rem;">
           <div style="background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
             <div style="padding:.75rem 1rem;background:var(--bg-surface);border-bottom:1px solid var(--border-default);font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);">
               Chapters (${chapters.length})
             </div>
             <div style="display:flex;flex-direction:column;max-height:650px;overflow-y:auto;">
               ${chapters.map((ch, idx) => `
-                <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border-muted);cursor:pointer;background:${idx === activeLibraryChapter ? 'rgba(255, 212, 0, 0.12)' : 'transparent'};border-left:3px solid ${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'transparent'};" onclick="window.AppEngine.selectChapter(${idx})">
-                  <div style="font-weight:600;font-size:.88rem;color:${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'var(--text-primary)'};">${ch.title}</div>
-                  <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px;">${ch.filename}</div>
+                <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border-muted);cursor:pointer;background:${idx === activeLibraryChapter ? 'var(--sel-bg)' : 'transparent'};border-left:3px solid ${idx === activeLibraryChapter ? 'var(--sel-border)' : 'transparent'};" onclick="window.AppEngine.selectChapter(${idx})">
+                  <div style="font-weight:600;font-size:.88rem;color:${idx === activeLibraryChapter ? 'var(--sel-fg)' : 'var(--text-primary)'};">${ch.title}</div>
+                  <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px;">${ch.filename || ch.html || ''}</div>
                 </div>
               `).join('')}
             </div>
           </div>
 
-          <div class="card" style="padding:2rem;min-height:650px;background:var(--bg-card);max-height:85vh;overflow-y:auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid var(--border-muted);padding-bottom:.75rem;">
+          <div class="card lib-reader" style="padding:0;min-height:650px;background:var(--bg-card);max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-bottom:1px solid var(--border-muted);background:var(--bg-surface);flex-shrink:0;">
               <span class="tag-badge gitlab">Chapter ${activeLibraryChapter + 1} of ${chapters.length}</span>
-              <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">${current.filename}</span>
+              <a href="${src}" target="_blank" rel="noopener" style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-link);">Open full page ↗</a>
             </div>
-            <div style="font-size:.92rem;line-height:1.65;color:var(--text-primary);">
-              ${formatMarkdown(current.content)}
-            </div>
+            <iframe class="lib-iframe" title="${current.title || 'Library chapter'}" src="${src}" loading="lazy"></iframe>
           </div>
         </div>
       </div>
@@ -579,14 +576,15 @@
   }
 
   function renderDebates(data) {
+    const debates = data.debates || [];
     return `
       <div>
         <h1 class="page-title">Live Architectural Claims & Debates</h1>
         <p class="page-subtitle">
-          Live debates, warrants, hidden assumptions, and designed counter-evidence for GitLab as an enterprise platform.
+          ${debates.length} live debates with warrants. Open the panels below for hidden assumptions, qualifications, and designed counter-evidence.
         </p>
 
-        ${data.debates.map(d => `
+        ${debates.map(d => `
           <div class="debate-card">
             <div class="debate-header">
               <span class="debate-badge">Debate ${d.num}</span>
@@ -604,19 +602,23 @@
               </div>
             </div>
 
-            <div class="debate-footer">
-              <div style="margin-bottom:.5rem;">
-                <b style="color:var(--text-primary);">Warrant:</b> ${d.warrant}
-              </div>
-              <div style="margin-bottom:.5rem;">
-                <b style="color:var(--text-primary);">Hidden Assumptions:</b> ${d.hiddenAssumptions}
-              </div>
-              <div style="margin-bottom:.5rem;">
-                <b style="color:var(--text-primary);">Qualifications:</b> ${d.qualifications}
-              </div>
-              <div style="padding-top:.5rem;border-top:1px dashed var(--border-muted);color:var(--text-link);">
-                <b>🔬 Evidence That Would Change the Picture:</b> ${d.changingEvidence}
-              </div>
+            <div class="debate-footer debate-panels">
+              <details class="debate-panel" open>
+                <summary>Warrant</summary>
+                <div class="debate-panel-body">${d.warrant}</div>
+              </details>
+              <details class="debate-panel">
+                <summary>Hidden assumptions</summary>
+                <div class="debate-panel-body">${d.hiddenAssumptions}</div>
+              </details>
+              <details class="debate-panel">
+                <summary>Qualifications</summary>
+                <div class="debate-panel-body">${d.qualifications}</div>
+              </details>
+              <details class="debate-panel">
+                <summary>🔬 Evidence that would change the picture</summary>
+                <div class="debate-panel-body">${d.changingEvidence}</div>
+              </details>
             </div>
           </div>
         `).join('')}
@@ -625,16 +627,18 @@
   }
 
   function renderPractice(data) {
+    const qn = (data.quizzes || []).length;
+    const fn = (data.glossary || []).length;
     return `
       <div>
         <h1 class="page-title">Practice Hub: Quizzes & Flashcards</h1>
         <p class="page-subtitle">
-          Test your architectural recall with the 10-question evaluation or drill key DevSecOps concepts with active recall flashcards.
+          ${qn}-question architecture quiz, plus ${fn} flashcards. On flashcards: <b>Space</b> flips the card; ← / → move between cards. Click also flips.
         </p>
 
-        <div style="display:flex;gap:10px;margin-bottom:1.5rem;">
-          <button class="btn btn-primary" id="btn-show-quiz" onclick="window.EnhanceEngine.switchPracticeMode('quiz')">Interactive Quiz Engine</button>
-          <button class="btn" id="btn-show-flashcards" onclick="window.EnhanceEngine.switchPracticeMode('flashcards')">Flashcards Deck</button>
+        <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btn-show-quiz" onclick="window.EnhanceEngine.switchPracticeMode('quiz')">Interactive Quiz (${qn})</button>
+          <button class="btn" id="btn-show-flashcards" onclick="window.EnhanceEngine.switchPracticeMode('flashcards')">Flashcards (${fn})</button>
         </div>
 
         <!-- Quiz Container -->
@@ -713,14 +717,36 @@
   }
 
   function renderBacklog() {
-    const items = [
-      ['Captions for video shorts', 'The six shorts have no caption track yet. Add WebVTT captions so they work with sound off.'],
-      ['Source ledger re-check', 'Re-verify source links and FedRAMP status each quarter; government listings change.'],
-      ['Code legend', 'Codes used across the console: [S#] = source number in the Source Ledger, FM-## = failure mode number, "Rung 200" = difficulty level (100 basic, 200 applied, 300 expert).'],
-      ['Offline video', 'The offline cache stores pages and styles only; videos and slides still need a connection.']
+    const open = [
+      ['Captions for video shorts', 'Add WebVTT captions to the six shorts so they work with sound off.'],
+      ['Quarterly source re-check', 'Re-verify FedRAMP listing FR2411959145 and ledger URLs — government pages move.'],
+      ['Offline media', 'Service worker caches shell CSS/JS only; slides and MP4s still need network.']
     ];
-    return `<div class="view-header"><h1>Backlog</h1><p style="color:var(--text-secondary)">Work not finished yet, and notes on the codes used across the console.</p></div>
-      <div style="display:grid;gap:1rem;margin-top:1.5rem;">${items.map(([t,d]) => `<div class="card" style="padding:1rem 1.25rem;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--bg-card);"><div style="font-weight:700;margin-bottom:.25rem;">${t}</div><div style="color:var(--text-secondary)">${d}</div></div>`).join('')}</div>`;
+    const done = [
+      ['ODM presentation on Deck', 'YouTube PzEIulYVSrA embedded above the 15-slide ODM deck.'],
+      ['Library HTML chapters', 'Deep Dive Library now loads full HTML in the reader pane (no raw markdown dump).'],
+      ['Architecture view SVGs', 'Conceptual / logical / physical / AI views use flat agnostic icon boards.']
+    ];
+    const codes = [
+      ['[S#]', 'Source number in the Source Ledger'],
+      ['FM-##', 'Failure mode id on the Failure Modes page'],
+      ['Rung 100 / 200 / 300', 'Difficulty: foundational → applied → expert'],
+      ['OV / SV / CV', 'DoDAF view codes used on Architecture Views']
+    ];
+    const card = (t, d) => `<div class="card" style="padding:1rem 1.25rem;"><div style="font-weight:700;margin-bottom:.25rem;">${t}</div><div style="color:var(--text-secondary);font-size:.9rem;">${d}</div></div>`;
+    return `
+      <div>
+        <h1 class="page-title">Backlog</h1>
+        <p class="page-subtitle">Open work, recently landed items, and the code legend used across the console.</p>
+        <h2 style="font-size:1.05rem;margin:1.25rem 0 .6rem;">Open</h2>
+        <div style="display:grid;gap:.75rem;">${open.map(([t,d]) => card(t,d)).join('')}</div>
+        <h2 style="font-size:1.05rem;margin:1.75rem 0 .6rem;">Recently done</h2>
+        <div style="display:grid;gap:.75rem;">${done.map(([t,d]) => card(t,d)).join('')}</div>
+        <h2 style="font-size:1.05rem;margin:1.75rem 0 .6rem;">Code legend</h2>
+        <div class="table-wrapper"><table class="data-table"><thead><tr><th>Code</th><th>Meaning</th></tr></thead><tbody>
+          ${codes.map(([c,m]) => `<tr><td style="font-family:var(--font-mono);font-weight:700;color:var(--accent-gitlab);">${c}</td><td>${m}</td></tr>`).join('')}
+        </tbody></table></div>
+      </div>`;
   }
 
   function renderSources(data) {

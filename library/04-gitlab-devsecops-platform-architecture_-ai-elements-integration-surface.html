@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitLab DevSecOps Platform Architecture: AI Elements &amp; Integration Surface</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>GitLab DevSecOps Platform Architecture: AI Elements &amp; Integration Surface</h1>
+<hr />
+<h3>1. AI Architecture &amp; Copilot Features</h3>
+<h4>1.1 Copilot Feature Catalog &amp; Data Read/Write Profiles</h4>
+<p>The platform incorporates artificial intelligence features across its development and security workflow via GitLab Duo and the Duo Agent Platform. The operational capabilities, input context requirements, output destinations, and availability across platform deployment models are detailed in the inventory below.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Feature Name &amp; Tier Requirement</th>
+<th style="text-align: left;">Context Read (Inputs)</th>
+<th style="text-align: left;">Data Written (Outputs)</th>
+<th style="text-align: left;">Offering Availability</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Code Suggestions</strong><br><em>(Duo Core / Pro / Enterprise)</em></td>
+<td style="text-align: left;">Source code files, repository context, open file tabs in IDE</td>
+<td style="text-align: left;">In-line code completions and code block generations</td>
+<td style="text-align: left;">GitLab.com, Self-Managed (default), Dedicated Commercial.<br><em>Note: Also available on Dedicated for Government and air-gapped Self-Managed when configured via the Self-Hosted AI Gateway under an offline licensing model.</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab Duo Chat</strong><br><em>(Duo Core / Pro / Enterprise)</em></td>
+<td style="text-align: left;">File content, Merge Request (MR) diffs, issue descriptions, pipeline failure logs</td>
+<td style="text-align: left;">Conversational responses, code refactoring explanations, vulnerability summaries</td>
+<td style="text-align: left;">GitLab.com, Self-Managed (default), Dedicated Commercial.<br><em>Note: Also available on Dedicated for Government and air-gapped Self-Managed when configured via the Self-Hosted AI Gateway under an offline licensing model.</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Merge Request Summary</strong><br><em>(Duo Core / Pro / Enterprise)</em></td>
+<td style="text-align: left;">MR diffs, commit history, linked issue descriptions</td>
+<td style="text-align: left;">Generated MR description text and change summaries</td>
+<td style="text-align: left;">GitLab.com, Self-Managed (default), Dedicated Commercial.<br><em>Note: Also available on Dedicated for Government and air-gapped Self-Managed when configured via the Self-Hosted AI Gateway under an offline licensing model.</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Duo Agent Platform Foundational Agents</strong><br><em>(Premium / Ultimate with Duo)</em></td>
+<td style="text-align: left;">Broader Software Development Lifecycle (SDLC) context, project metadata, repository trees, issue threads</td>
+<td style="text-align: left;">Automated task execution outputs, code edits, orchestration steps</td>
+<td style="text-align: left;">Managed or Self-Hosted AI Gateway; <strong>Not Authorized</strong> on Dedicated for Government under its FedRAMP Moderate boundary.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>1.2 Grounding Paths &amp; Model Execution Runtimes</h4>
+<p>GitLab Duo relies on two primary data routing architectures to ground AI interactions in repository context, along with an instance-local execution mode for IDE tooling.</p>
+<ul>
+<li>
+<p><strong>GitLab-Managed AI Gateway Path</strong>:</p>
+<ul>
+<li>This default architecture routes requests from the user application or IDE client through the application layer to the GitLab-managed AI Gateway.</li>
+<li>The gateway formats and passes prompts to external third-party vendor Large Language Models (LLMs), including the Anthropic Claude Sonnet family, Codestral, Fireworks/Mistral, Google Gemini, and OpenAI.</li>
+<li>This path serves as the baseline for GitLab.com, Self-Managed default configurations, and Dedicated Commercial environments.</li>
+</ul>
+</li>
+<li>
+<p><strong>Self-Hosted AI Gateway Path</strong>:</p>
+<ul>
+<li>Designed for strict regulatory and network isolation, this architecture deploys a customer-operated AI Gateway directly within the customer's authorization boundary.</li>
+<li>Prompts are processed locally and routed to customer-managed or cloud-allocated model runtimes (such as vLLM, AWS Bedrock-gov, or Azure-gov OpenAI).</li>
+<li>This path is required for air-gapped Self-Managed installations and Dedicated for Government environments where offline licensing applies, ensuring that no prompts or code context cross the tenant boundary to GitLab-managed AI infrastructure.</li>
+</ul>
+</li>
+<li>
+<p><strong>Local Model Control (MCP Server)</strong>:</p>
+<ul>
+<li>For IDE and local developer tooling, the platform supports integration via a local Model Context Protocol (MCP) server.</li>
+<li>Operating directly on the developer workstation or Self-Managed instance, this server processes tool requests locally. Context and execution payloads remain entirely within the local runtime, ensuring no data is transmitted to GitLab.com when MCP is operated locally.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h4>1.3 Governance, Access Controls &amp; Security Boundaries</h4>
+<ul>
+<li>
+<p><strong>Identity &amp; Access Governance</strong>:<br />
+    AI grounding requests enforce the user’s active authorization profile. When an AI feature reads repository context (such as files, MRs, or pipeline logs), permission checks verify the user's access rights against the project or group. Context retrieval is strictly bounded by what the authenticated individual is authorized to read through standard role-based access control (RBAC).</p>
+</li>
+<li>
+<p><strong>Public Sector Authorization Restrictions</strong>:<br />
+    Under the FedRAMP Moderate Authority to Operate (ATO) boundary for Dedicated for Government (FR2411959145), the Duo Agent Platform flows and external AI agent integrations are <strong>not authorized</strong>. Because autonomous agentic orchestration involves dynamic tool calls and external system integration, its prohibition in FedRAMP Moderate environments prevents unvetted egress calls and potential prompt injection vectors from reaching unclassified government workloads. Government deployments must restrict AI execution to approved in-boundary paths operating under offline licensing models.</p>
+</li>
+<li>
+<p><strong>Administrative &amp; Infrastructure Split</strong>:<br />
+    The platform enforces a clear separation of operational responsibility. Top-level customer administrators manage application-level security policies, toggle AI features, and configure identity integrations. Infrastructure operators (GitLab personnel in Dedicated environments or customer teams in Self-Managed setups) maintain underlying tenant infrastructure, network routes, and host security without gaining visibility into application-level prompt content.</p>
+</li>
+</ul>
+<hr />
+<h4>1.4 AI Interaction Logging, Observability &amp; Data Retention</h4>
+<p>Prompts and completions traverse the application and gateway layers to deliver real-time AI capabilities. System-level interaction events are recorded to maintain application telemetry and audit logs.</p>
+<blockquote>
+<p><strong>Mandatory Architectural Silence Note:</strong> The provided source context does not specify exact data retention schedules or durations, physical storage locations or geographic regions for prompt/completion log records, or mechanisms for Data Loss Prevention (DLP) and security label enforcement within AI data flows. These details remain unverified in the source baseline.</p>
+</blockquote>
+<hr />
+<h3>2. Platform Integration Surface Architecture</h3>
+<h4>2.1 API &amp; System Interface Inventory</h4>
+<p>The platform exposes five primary interfaces for user access, programmatic automation, job execution, and tool integration.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Interface / API</th>
+<th style="text-align: left;">Purpose &amp; Exchange Payload</th>
+<th style="text-align: left;">Authentication Model</th>
+<th style="text-align: left;">Endpoint / Deployment Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>REST API</strong></td>
+<td style="text-align: left;">Project administration, MR workflows, pipeline triggering, security finding export; JSON payloads</td>
+<td style="text-align: left;">Personal Access Tokens (PAT), OAuth 2.0, Job Tokens</td>
+<td style="text-align: left;">Tenant URL; subject to tier-based rate limits across all deployment models</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GraphQL API</strong></td>
+<td style="text-align: left;">High-efficiency structured queries for SDLC metadata, dashboards, and security inventory; JSON payloads</td>
+<td style="text-align: left;">Personal Access Tokens (PAT), OAuth 2.0, Job Tokens</td>
+<td style="text-align: left;">Tenant URL; subject to tier-based query limits across all deployment models</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job API (Runner)</strong></td>
+<td style="text-align: left;">Polling for pipeline jobs, streaming build logs, uploading build artifacts and caches</td>
+<td style="text-align: left;">Runner Tokens (polling/registration), Job Tokens (execution scope)</td>
+<td style="text-align: left;">Tenant URL; on Dedicated for Government, runners poll from outside the tenant boundary</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git HTTP / SSH</strong></td>
+<td style="text-align: left;">Source control operations (clone, fetch, push); Git packfiles and repository diffs</td>
+<td style="text-align: left;">IdP assertions, PAT, SSH Keys / Deploy Keys</td>
+<td style="text-align: left;">Standard HTTPS/SSH ports; handled via Workhorse (HTTP) or GitLab Shell (SSH) to Gitaly</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Local MCP Server</strong></td>
+<td style="text-align: left;">Model Context Protocol integration for local IDEs and agent interfaces</td>
+<td style="text-align: left;">Instance-local authentication</td>
+<td style="text-align: left;">Self-Managed local execution; isolated from public cloud endpoints</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>2.2 Connector Frameworks &amp; Infrastructure Integration Points</h4>
+<ul>
+<li>
+<p><strong>GitLab Runner (Job Plane Interface)</strong>:</p>
+<ul>
+<li>The job execution plane operates in a completely separate trust domain from the control plane.</li>
+<li>Running untrusted user code or arbitrary CI/CD pipeline scripts directly inside the application control plane poses severe lateral movement and privilege escalation risks. Isolating the job plane ensures that execution occurs on dedicated, non-privileged worker nodes.</li>
+<li>Runners authenticate using ephemeral job tokens or runner tokens and poll the central application control plane over the HTTPS Job API to receive job payloads.</li>
+<li>In Dedicated for Government environments, hosted runners within the tenant are unavailable; customers are required to deploy and operate self-managed, FIPS-compliant runners in isolated customer-managed environments outside the FedRAMP boundary.</li>
+</ul>
+</li>
+<li>
+<p><strong>Kubernetes Agent (KAS)</strong>:</p>
+<ul>
+<li>The GitLab Agent for Kubernetes (KAS) establishes a bi-directional pull/deploy bridge between customer Kubernetes clusters and the platform control plane.</li>
+<li>Using cluster-bound agent tokens over HTTPS, KAS pulls state definitions from Git repositories to drive GitOps deployments without requiring public inbound firewall ports on the target cluster.</li>
+<li><em>Architectural Silence Note:</em> Source documentation is silent regarding whether KAS holds a formal Provisional Authorization (PA) under the Dedicated for Government FedRAMP Moderate boundary (FR2411959145).</li>
+</ul>
+</li>
+<li>
+<p><strong>AWS PrivateLink</strong>:</p>
+<ul>
+<li>Enables private network topology for Dedicated Commercial and Dedicated for Government instances.</li>
+<li>Supports inbound connections (restricting administrative and user access to customer VPCs) and outbound connections (allowing pipeline jobs to access internal customer resources).</li>
+<li>AWS PrivateLink is specifically required during Geo-based tenant migrations to pull repository state and database snapshots privately into Dedicated instances without traversing public endpoints.</li>
+</ul>
+</li>
+<li>
+<p><strong>Artifact &amp; Container Registries</strong>:</p>
+<ul>
+<li>Integrated registries host container images, security scanning utility tools, and package build artifacts.</li>
+<li>To prevent Puma/Rails application server bottlenecks during high-volume operations, container image pulls and package artifact uploads bypass the application layer via GitLab Workhorse, streaming object payloads directly to underlying S3-compatible storage.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h4>2.3 Identity Integration, SSO &amp; Token Hierarchy</h4>
+<ul>
+<li>
+<p><strong>Federated SSO &amp; Government Identity</strong>:</p>
+<ul>
+<li>The platform supports federated Single Sign-On (SSO) using SAML 2.0 and OpenID Connect (OIDC).</li>
+<li>For Dedicated for Government, compliance mandates hardware token authentication (PIV/CAC). The platform does not operate a native PIV/CAC validation stack; authentication is routed entirely through the agency’s external Identity Provider (IdP), which validates the card credentials and passes secure SAML/OIDC assertions to the platform.</li>
+</ul>
+</li>
+<li>
+<p><strong>Token Taxonomy &amp; Ephemeral Scopes</strong>:<br />
+    Authentication flows down from federated IdP identity assertions into a granular token hierarchy:</p>
+<ul>
+<li><em>Personal Access Tokens (PAT)</em>: Tied to user identity and constrained by the user's role permissions. Fine-grained permissions allow restricting PATs to minimal required API scopes.</li>
+<li><em>Group &amp; Project Access Tokens</em>: Scoped to specific namespaces or project boundaries for automated integrations, avoiding reliance on individual personal user profiles.</li>
+<li><em>Runner Tokens</em>: Used strictly to authenticate the runner agent during registration and job polling. Frequent rotation is required to minimize token exposure risks.</li>
+<li><em>Job Tokens</em>: Ephemeral, short-lived tokens dynamically generated for the duration of a single CI/CD job, restricting worker execution access strictly to the resources required for that specific job.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h3>3. Architectural Silence &amp; Boundary Limits Register</h3>
+<p>The following register identifies structural limitations, unverified capabilities, and topics omitted from the available technical baseline documentation.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Area / Surface</th>
+<th style="text-align: left;">Source Silence Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>AI Log Retention Schedule &amp; Storage Location</strong></td>
+<td style="text-align: left;">Sources do not state the exact retention period, physical storage region, storage tier, or DLP/security labeling rules applied to AI prompt and completion logs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Dedicated for Government Hosted FIPS Runners</strong></td>
+<td style="text-align: left;">GitLab-hosted runners are not available inside the Dedicated for Government tenant boundary. Source docs require customers to operate self-managed FIPS runners externally.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Dedicated for Government KAS Provisional Authorization</strong></td>
+<td style="text-align: left;">Sources do not confirm whether the Kubernetes Agent Server (KAS) holds a formal FedRAMP Provisional Authorization (PA) under the FR2411959145 boundary.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Slack / Teams Integration Scope</strong></td>
+<td style="text-align: left;">Webhooks and notification connectors for messaging platforms (Slack/Teams) exist as product features, but sources are silent on their authorization status within the FedRAMP Moderate boundary.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Dedicated for Government Duo Agent Platform Authorization</strong></td>
+<td style="text-align: left;">Duo Agent Platform flows and external agent orchestration tool calls are explicitly <strong>not authorized</strong> under the Dedicated for Government FedRAMP Moderate ATO.</td>
+</tr>
+</tbody>
+</table>
+</article>
+</body>
+</html>

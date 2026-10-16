@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="Physical view: Dedicated for Government placement">
+  <rect width="960" height="540" fill="#0f1419"/>
+  <text x="32" y="36" fill="#ffd400" font-family="Inter,Segoe UI,sans-serif" font-size="18" font-weight="700">Physical · Dedicated for Government</text>
+  <text x="32" y="58" fill="#9aa4b2" font-family="Inter,Segoe UI,sans-serif" font-size="12">Single-tenant AWS GovCloud US-West · FedRAMP Moderate FR2411959145</text>
+
+  <!-- Switchboard -->
+  <rect x="300" y="80" width="360" height="54" rx="10" fill="#1e293b" stroke="#64748b"/>
+  <text x="480" y="112" text-anchor="middle" fill="#e2e8f0" font-family="Inter,Segoe UI,sans-serif" font-size="13" font-weight="700">Switchboard + Amp (GitLab ops plane)</text>
+
+  <!-- Tenant box -->
+  <rect x="80" y="160" width="520" height="320" rx="16" fill="#16202a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="100" y="190" fill="#7dd3fc" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700">Customer AWS GovCloud account (tenant)</text>
+
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="11">
+    <rect x="110" y="220" width="140" height="70" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+    <text x="180" y="250" text-anchor="middle" fill="#e2e8f0" font-weight="600">Puma / Rails</text>
+    <text x="180" y="270" text-anchor="middle" fill="#94a3b8">app + API</text>
+
+    <rect x="270" y="220" width="140" height="70" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+    <text x="340" y="250" text-anchor="middle" fill="#e2e8f0" font-weight="600">Sidekiq</text>
+    <text x="340" y="270" text-anchor="middle" fill="#94a3b8">async jobs</text>
+
+    <rect x="430" y="220" width="140" height="70" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+    <text x="500" y="250" text-anchor="middle" fill="#e2e8f0" font-weight="600">PostgreSQL</text>
+    <text x="500" y="270" text-anchor="middle" fill="#94a3b8">system of record</text>
+
+    <rect x="110" y="320" width="220" height="70" rx="10" fill="#0b1220" stroke="#fbbf24"/>
+    <text x="220" y="350" text-anchor="middle" fill="#e2e8f0" font-weight="600">Sharded Gitaly</text>
+    <text x="220" y="370" text-anchor="middle" fill="#94a3b8">no Praefect · EBS snapshots</text>
+
+    <rect x="350" y="320" width="220" height="70" rx="10" fill="#0b1220" stroke="#38bdf8"/>
+    <text x="460" y="350" text-anchor="middle" fill="#e2e8f0" font-weight="600">Registry / artifacts</text>
+    <text x="460" y="370" text-anchor="middle" fill="#94a3b8">container + package</text>
+
+    <text x="100" y="440" fill="#94a3b8" font-size="12">GitLab patches tenant OS, DB, geo DR. Isolation unit = AWS account.</text>
+  </g>
+
+  <!-- Outside -->
+  <rect x="640" y="160" width="280" height="320" rx="16" fill="#14201a" stroke="#34d399" stroke-width="2"/>
+  <text x="660" y="190" fill="#6ee7b7" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="700">Outside tenant</text>
+  <g font-family="Inter,Segoe UI,sans-serif" font-size="11">
+    <rect x="670" y="220" width="220" height="60" rx="10" fill="#0b1612" stroke="#34d399"/>
+    <text x="780" y="246" text-anchor="middle" fill="#e2e8f0" font-weight="600">Agency IdP (PIV/CAC)</text>
+    <text x="780" y="264" text-anchor="middle" fill="#94a3b8">SAML / OIDC to GitLab</text>
+
+    <rect x="670" y="300" width="220" height="60" rx="10" fill="#0b1612" stroke="#34d399"/>
+    <text x="780" y="326" text-anchor="middle" fill="#e2e8f0" font-weight="600">FIPS Runners</text>
+    <text x="780" y="344" text-anchor="middle" fill="#94a3b8">customer VPC · outbound HTTPS</text>
+
+    <rect x="670" y="380" width="220" height="60" rx="10" fill="#0b1612" stroke="#34d399"/>
+    <text x="780" y="406" text-anchor="middle" fill="#e2e8f0" font-weight="600">Self-hosted AI Gateway</text>
+    <text x="780" y="424" text-anchor="middle" fill="#94a3b8">Bedrock-gov / private models</text>
+  </g>
+</svg>

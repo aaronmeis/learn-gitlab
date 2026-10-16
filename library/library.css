@@ -1,0 +1,57 @@
+
+body.lib-doc {
+  margin: 0;
+  padding: 1.25rem 1.5rem 2.5rem;
+  background: var(--bg-card, #fff);
+  color: var(--text-primary, #111);
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.prose h1 { font-size: 1.55rem; font-weight: 800; margin: 0 0 1rem; line-height: 1.25; }
+.prose h2 {
+  font-size: 1.2rem; font-weight: 750; margin: 1.75rem 0 0.6rem;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--border-muted, #e6e6e1);
+}
+.prose h3 { font-size: 1.05rem; font-weight: 700; margin: 1.25rem 0 0.4rem; }
+.prose p { margin: 0.55rem 0; color: var(--text-primary, #111); }
+.prose li { margin: 0.25rem 0; color: var(--text-secondary, #444); }
+.prose ul, .prose ol { padding-inline-start: 1.35rem; margin: 0.4rem 0 0.8rem; }
+.prose strong { color: var(--text-primary, #111); }
+.prose code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84em;
+  background: var(--bg-surface, #f1f1ee);
+  border: 1px solid var(--border-default, #d4d4cf);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.prose pre {
+  overflow: auto;
+  background: var(--bg-surface, #f1f1ee);
+  border: 1px solid var(--border-default, #d4d4cf);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+}
+.prose pre code { background: none; border: 0; padding: 0; }
+.prose table {
+  width: 100%; border-collapse: collapse; margin: 0.85rem 0 1.25rem;
+  font-size: 0.88rem;
+}
+.prose th, .prose td {
+  border: 1px solid var(--border-default, #d4d4cf);
+  padding: 0.45rem 0.6rem;
+  text-align: start;
+  vertical-align: top;
+}
+.prose th { background: var(--bg-surface, #f1f1ee); font-weight: 700; }
+.prose blockquote {
+  margin: 0.85rem 0;
+  padding: 0.55rem 0.9rem;
+  border-inline-start: 3px solid var(--accent-gitlab, #7a5c00);
+  background: var(--bg-surface, #f1f1ee);
+  color: var(--text-secondary, #444);
+}
+.prose hr { border: 0; border-top: 1px solid var(--border-muted, #e6e6e1); margin: 1.5rem 0; }
+.prose a { color: var(--text-link, #7a5c00); }

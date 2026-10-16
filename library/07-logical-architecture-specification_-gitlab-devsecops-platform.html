@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logical Architecture Specification: GitLab DevSecOps Platform</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>Logical Architecture Specification: GitLab DevSecOps Platform</h1>
+<hr />
+<h2>1. System Boundary &amp; Architectural Altitude</h2>
+<h3>1.1 Logical Boundary Definition</h3>
+<p>The logical architecture of the DevSecOps platform establishes an immutable boundary separating the <strong>Control Plane</strong> from the <strong>Job Plane</strong>. This structural division guarantees that system state, security policies, identity context, and governance logic remain strictly isolated from untrusted, arbitrary user code execution.</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+|                                   CONTROL PLANE                                   |
+|                                                                                   |
+|  +-----------------------+     REST / HTTPS     +------------------------------+  |
+|  |   HTTP / SSH Front    |---------------------&gt;|    Application Controller    |  |
+|  |         Doors         |                      |            / Core            |  |
+|  +-----------------------+                      +--------------+---------------+  |
+|              |                                                 |                  |
+|              | gRPC / Internal API                             | SQL Reads/Writes |
+|              v                                                 v                  |
+|  +-----------------------+                      +------------------------------+  |
+|  |    Git RPC Service    |                      |     System of Record DB      |  |
+|  +-----------------------+                      +------------------------------+  |
+|                                                                |                  |
+|                                                                | Enqueue Tasks    |
+|                                                                v                  |
+|                                                 +------------------------------+  |
+|                                                 |          Job Queue           |  |
+|                                                 +------------------------------+  |
++----------------------------------------|------------------------------------------+
+                                         |
+                                         | gRPC / HTTP REST
+                                         | (Token-Authenticated, Short-Lived)
+                                         v
++-----------------------------------------------------------------------------------+
+|                                     JOB PLANE                                     |
+|                                                                                   |
+|  +-----------------------------------------------------------------------------+  |
+|  |                                 Job Worker                                  |  |
+|  |     (Isolated Execution Environment: Build, Scan, Test, Package, Artifact)  |  |
+|  +-----------------------------------------------------------------------------+  |
++-----------------------------------------------------------------------------------+
+</code></pre>
+<ul>
+<li><strong>Control Plane:</strong> Houses the central governance engine, administrative interface, user identity management, change metadata repository, pipeline orchestration system, vulnerability tracking database, and Git repository RPC interface. It maintains overall system state and enforces access controls across all platform capabilities.</li>
+<li><strong>Job Plane:</strong> Consists of ephemeral, isolated execution contexts (workers) dedicated to executing workload jobs defined in software repositories. The Job Plane compiles source code, evaluates test suites, executes static and dynamic security scanners, and constructs binary software packages.</li>
+</ul>
+<p>To preserve proper architectural altitude, this specification operates on the principle of <strong>vendor-neutrality</strong>. Platform capability, component responsibilities, data structures, and operational flows are defined by their logical behavior and interface contracts. Physical software realizations (such as Puma, Workhorse, Sidekiq, PostgreSQL, Redis, Gitaly, GitLab Shell, or GitLab Runner) are cited exclusively as illustrative physical deployments grounded in source material.</p>
+<h3>1.2 Trust Domains &amp; Boundary Rules</h3>
+<p>The logical platform is segmented into distinct trust domains, establishing explicit boundaries across actors, management services, and workload agents:</p>
+<h4>Logical Actors</h4>
+<ul>
+<li><strong>Developer:</strong> Land code changes, author pipeline configurations, and view job feedback within scoped project boundaries. (Low trust prior to peer review).</li>
+<li><strong>Reviewer:</strong> Approves code proposals, inspects automated test/vulnerability results, and authorizes merges into protected branches. (Medium trust).</li>
+<li><strong>Security Teams:</strong> Defines organization-wide security compliance policies, scan mandates, and vulnerability approval gates. (High trust over security policy; low trust over arbitrary repository code).</li>
+<li><strong>Platform Operator:</strong> Manages the operational health, scaling, backups, database schema, and identity integrations of the Control Plane. (High operational trust within the tenant boundary).</li>
+<li><strong>Job Operator:</strong> Provisions, patches, and isolates the execution machines forming the Job Plane. (High operational trust over runner infrastructure, operating logically <em>outside</em> or adjacent to the Control Plane boundary).</li>
+<li><strong>Identity Provider (IdP):</strong> Asserts user identity, single sign-on (SSO), and hardware-backed multi-factor credentials (SAML/OIDC, PIV/CAC). (External authoritative trust).</li>
+<li><strong>Authorizing Official (AO):</strong> Evaluates overall platform security compliance and issues legal Authority to Operate (ATO) decisions based on system risk profiles. (Highest administrative trust).</li>
+<li><strong>Auditor:</strong> Inspects system change logs, security finding records, approval histories, and compliance evidence without operational edit privileges. (Independent read-only trust).</li>
+</ul>
+<h4>Logical Trust Domains</h4>
+<ol>
+<li><strong>User / External Trust Domain:</strong> Contains external users, integrated IDEs, browser interfaces, agency identity providers, and API clients accessing the platform over public or enterprise networks.</li>
+<li><strong>Control Plane Trust Domain:</strong> Comprises the stateless web servers, asynchronous task queues, session caches, core relational databases, and abstracted Git storage services. Components in this domain operate inside a secured, high-trust security boundary with direct access to the System of Record DB.</li>
+<li><strong>Job Plane Trust Domain:</strong> Encompasses untrusted, short-lived worker instances running customer-written compilation scripts, dependency installs, and dynamic binary execution.</li>
+</ol>
+<h4>Security Isolation Rules</h4>
+<ul>
+<li><strong>Untrusted Code Isolation:</strong> Job workers process arbitrary, user-submitted code and must never reside within the same logical trust domain as the Control Plane database or raw repository filesystems.</li>
+<li><strong>Prohibition of Direct Database Access:</strong> Job workers are explicitly blocked from initiating direct network, IPC, or SQL connections to the System of Record DB, Session &amp; Cache Store, or internal administrative APIs.</li>
+<li><strong>Token-Gated Control Plane Ingress:</strong> Any communication originating from the Job Plane into the Control Plane must pass through public-facing or internal API proxies using short-lived, cryptographically hashed, explicitly scoped execution credentials (Runner Tokens and Job Tokens).</li>
+<li><strong>Credential and Scope Containment:</strong> Compromise of an individual Job Worker or job token exposes only the local execution context and ephemeral build artifacts assigned to that specific job. It grants no lateral read, write, or administrative rights across unrelated repository shards, database records, or Control Plane services.</li>
+</ul>
+<hr />
+<h2>2. Logical Component Architecture</h2>
+<h3>2.1 Component Responsibility Matrix</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Logical Component</th>
+<th style="text-align: left;">Core Responsibilities</th>
+<th style="text-align: left;">Conceptual Capability Realized</th>
+<th style="text-align: left;">Inputs &amp; Source</th>
+<th style="text-align: left;">Outputs &amp; Destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>HTTP Front Door</strong></td>
+<td style="text-align: left;">Enforces TLS termination, performs URI and API route dispatching, reverse-proxies web/API traffic, handles Git-over-HTTP traffic ingress.</td>
+<td style="text-align: left;">Change Record, Identity Handoff</td>
+<td style="text-align: left;">Client HTTPS connections (Web UI, API, Git-over-HTTP)</td>
+<td style="text-align: left;">Application Controller/Core, Git RPC Service (via HTTP helper logic)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SSH Front Door</strong></td>
+<td style="text-align: left;">Manages Git-over-SSH connection ingress, terminates SSH transport layers, maps SSH public keys to platform identities.</td>
+<td style="text-align: left;">Git Storage</td>
+<td style="text-align: left;">Client Git SSH streams</td>
+<td style="text-align: left;">Git RPC Service (following synchronous internal authorization checks)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Application Controller/Core</strong></td>
+<td style="text-align: left;">Orchestrates project/MR lifecycles, parses <code>.gitlab-ci.yml</code> configurations, enforces RBAC/security policies, processes business logic, and serves internal validation APIs.</td>
+<td style="text-align: left;">Change Record, Finding Record, Offering Choice</td>
+<td style="text-align: left;">External HTTP requests via Front Door, internal API callback queries</td>
+<td style="text-align: left;">System of Record DB, Job Queue, Git RPC Service, AI Gateway</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Queue</strong></td>
+<td style="text-align: left;">Manages asynchronous background processing, handles transactional mailers, processes imports/exports, and coordinates CI pipeline job fan-out distribution.</td>
+<td style="text-align: left;">Pipeline Contract</td>
+<td style="text-align: left;">Asynchronous task creation events from Application Controller</td>
+<td style="text-align: left;">Queued task payloads evaluated by background processing routines</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Session &amp; Cache Store</strong></td>
+<td style="text-align: left;">Provides high-speed key-value caching, maintains user session states, stores rate-limiting counters, and holds ephemeral background queue metadata in memory.</td>
+<td style="text-align: left;">Change Record, Pipeline Contract</td>
+<td style="text-align: left;">Application Controller state writes, Job Queue scheduling tasks</td>
+<td style="text-align: left;">Cached system settings, active session keys, background job metadata</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>System of Record DB</strong></td>
+<td style="text-align: left;">Serves as the authoritative persistent relational store for user identities, access permissions, project hierarchies, pipeline execution states, and vulnerability findings.</td>
+<td style="text-align: left;">Change Record, Finding Record</td>
+<td style="text-align: left;">Relational SQL reads/writes from Application Controller</td>
+<td style="text-align: left;">Structured record rows, entity relationship states</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git RPC Service</strong></td>
+<td style="text-align: left;">Encapsulates repository access by abstracting all Git read/write operations behind gRPC interfaces, strictly isolating application nodes from disk IOPS.</td>
+<td style="text-align: left;">Git Storage</td>
+<td style="text-align: left;">High-level gRPC remote procedure requests from Application Controller or Front Doors</td>
+<td style="text-align: left;">Streaming Git object trees, commit logs, packfiles, diff payloads</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Worker</strong></td>
+<td style="text-align: left;">Ephemeral, isolated worker agent polling for tasks; clones repositories, executes compilation scripts, runs security scanners, and posts execution telemetry.</td>
+<td style="text-align: left;">Job Execution, Finding Record, Artifact Store</td>
+<td style="text-align: left;">Ephemeral job payload and short-lived execution tokens from Application Controller</td>
+<td style="text-align: left;">Execution logs, vulnerability finding arrays, compiled package binaries</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Artifact Registry</strong></td>
+<td style="text-align: left;">Stores and indexes binary artifacts, container image layers, and package bundles generated during pipeline execution.</td>
+<td style="text-align: left;">Artifact Store</td>
+<td style="text-align: left;">Binary streams, container image layers, and package manifests from Job Worker</td>
+<td style="text-align: left;">Downloadable package payloads, container image pulls</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cluster Agent</strong></td>
+<td style="text-align: left;">Maintains stateful, inbound connections from Kubernetes management clusters to the Control Plane for deployment tracking and pull-based GitOps operations.</td>
+<td style="text-align: left;">Job Execution, Pipeline Contract</td>
+<td style="text-align: left;">Inbound cluster status updates, deployment events, Kubernetes API states</td>
+<td style="text-align: left;">Deployment telemetry updates dispatched to Application Controller</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AI Gateway</strong></td>
+<td style="text-align: left;">Handles prompt construction, context window parsing, user identity propagation, and request routing across external or self-hosted LLM backends.</td>
+<td style="text-align: left;">AI Assistance</td>
+<td style="text-align: left;">User prompts and code context payloads from Application Controller or IDE extensions</td>
+<td style="text-align: left;">Generated code completions, vulnerability explainers, automated chat responses</td>
+</tr>
+</tbody>
+</table>
+<h3>2.2 Storage &amp; Subsystem Abstractions</h3>
+<p>The platform's logical architecture strictly forbids direct repository filesystem access by the <em>Application Controller</em>, enforcing total decoupling through the <em>Git RPC Service</em>.</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+|                              APPLICATION TIER (STATELESS)                         |
+|                                                                                   |
+|  +-----------------------------------------------------------------------------+  |
+|  |                           Application Controller                            |  |
+|  |        (Processes Business Logic, Dynamic Views, Policy Evaluation)         |  |
+|  +-----------------------------------------------------------------------------+  |
++------------------------------------------|----------------------------------------+
+                                           |
+                                           | Pure gRPC Protocol
+                                           | (No Direct File / NFS Access)
+                                           v
++-----------------------------------------------------------------------------------+
+|                               STORAGE SUBSYSTEM LAYER                             |
+|                                                                                   |
+|  +-----------------------------------------------------------------------------+  |
+|  |                           Git RPC Service Layer                             |  |
+|  |           (Encapsulates Repository Access, Manages Disk Threads)            |  |
+|  +-----------------------------------------------------------------------------+  |
+|                                          |                                        |
+|                                          | Native POSIX File System I/O           |
+|                                          v                                        |
+|  +-----------------------------------------------------------------------------+  |
+|  |                           Physical Block Storage / Disk                     |  |
+|  +-----------------------------------------------------------------------------+  |
++-----------------------------------------------------------------------------------+
+</code></pre>
+<h4>Architectural Rationale for Storage Abstraction</h4>
+<ol>
+<li><strong>Elimination of Thread-Blocking I/O Contention:</strong> Dynamic application processes (realized physically by Ruby on Rails running under Puma workers) are optimized for low-latency memory execution and network I/O. When web application processes issue direct, synchronous POSIX calls (<code>open</code>, <code>read</code>, <code>fork</code>, <code>exec</code>) against Git repository disk structures, long-running Git packfile traversals block web worker threads. Under high concurrency, this leads to rapid thread exhaustion, elevated I/O wait states, and system-wide request starvation.</li>
+<li><strong>Abolition of Shared Network Filesystems (NFS):</strong> Distributing raw Git repository disks across web server pools using Network File System (NFS) mounts introduces severe file-locking latency, race conditions, and RPC timeouts. Decoupling storage behind a dedicated gRPC abstraction layer eliminates NFS requirements, enabling stateless web nodes to scale independently of storage hardware.</li>
+<li><strong>Encapsulation and Concurrency Control via gRPC:</strong> The <em>Git RPC Service</em> (realized physically by Gitaly) isolates all Git operations behind defined gRPC contracts. The service manages local process forks, optimizes memory caching of Git objects, and enforces process-level concurrency limits directly on the storage node.</li>
+<li><strong>Storage Topology Flexibility:</strong> Encapsulating repository operations behind an RPC layer allows the underlying storage architecture to be reconfigured—transitioning between sharded disk arrays and virtual storage clusters—without requiring application-level code modifications or breaking boundary security controls.</li>
+</ol>
+<hr />
+<h2>3. Logical Data Entities &amp; Domain Model</h2>
+<h3>3.1 Logical Data Model Specification</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Entity Name</th>
+<th style="text-align: left;">Key Attributes</th>
+<th style="text-align: left;">Primary Relationships</th>
+<th style="text-align: left;">Data Classification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Project</strong></td>
+<td style="text-align: left;"><code>id</code>, <code>path</code>, <code>visibility_level</code>, <code>security_policy_set</code></td>
+<td style="text-align: left;">Belongs to Group; owns Repo, Merge Requests, and Pipelines</td>
+<td style="text-align: left;">Organization Metadata</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Merge Request</strong></td>
+<td style="text-align: left;"><code>id</code>, <code>source_branch</code>, <code>target_branch</code>, <code>commit_sha</code>, <code>approval_status</code></td>
+<td style="text-align: left;">Belongs to Project; triggers Pipeline; aggregates Findings</td>
+<td style="text-align: left;">Software Change Record</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pipeline</strong></td>
+<td style="text-align: left;"><code>id</code>, <code>commit_sha</code>, <code>status</code>, <code>ref</code>, <code>stage_graph</code></td>
+<td style="text-align: left;">Triggered by Merge Request/commit; owns discrete Jobs</td>
+<td style="text-align: left;">Compliance &amp; Process Evidence</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job</strong></td>
+<td style="text-align: left;"><code>id</code>, <code>container_image</code>, <code>script_definition</code>, <code>runner_tag</code>, <code>status</code></td>
+<td style="text-align: left;">Belongs to Pipeline; assigned to Job Worker; emits Findings</td>
+<td style="text-align: left;">Runtime Execution Context</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Finding</strong></td>
+<td style="text-align: left;"><code>id</code>, <code>scanner_type</code>, <code>severity</code>, <code>cve_identifier</code>, <code>file_location</code></td>
+<td style="text-align: left;">Emitted by Job; linked to Merge Request and Security Policy</td>
+<td style="text-align: left;">Vulnerability Metadata</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runner Token</strong></td>
+<td style="text-align: left;"><code>token_hash</code>, <code>scope_level</code>, <code>expiration_timestamp</code>, <code>revocation_state</code></td>
+<td style="text-align: left;">Authenticates Job Worker; scoped to Instance, Group, or Project</td>
+<td style="text-align: left;">Authentication Secret</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Repo</strong></td>
+<td style="text-align: left;"><code>storage_shard_locator</code>, <code>relative_path</code>, <code>head_commit_sha</code></td>
+<td style="text-align: left;">Owned by Project; accessed exclusively via Git RPC Service</td>
+<td style="text-align: left;">Source Code Repository</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 Entity Relationship &amp; Lifecycle Dynamics</h3>
+<pre><code>+---------------+ 1         1..* +-----------------+ 1         1..* +--------------+
+|    Project    |----------------|  Merge Request  |----------------|   Pipeline   |
++---------------+                +-----------------+                +--------------+
+  |            |                          |                                |
+  | 1          | 1                        | 1..*                           | 1..*
+  v            v                          v                                v
++---------------+                       +------------------+        +--------------+
+|     Repo      |                       |     Finding      |&lt;-------|     Job      |
++---------------+                       +------------------+ (emits)+--------------+
+  |                                                                        |
+  | accessed via gRPC                                                      | executed by
+  v                                                                        v
++---------------+                                                   +--------------+
+|  Git RPC Svc  |                                                   |  Job Worker  |
++---------------+                                                   +--------------+
+                                                                           ^
+                                                                           | authenticated by
+                                                                    +--------------+
+                                                                    | Runner Token |
+                                                                    +--------------+
+</code></pre>
+<h4>Change Lifecycle Traceability Sequence</h4>
+<ol>
+<li><strong>Project Provisioning &amp; Storage Binding:</strong> A <strong>Project</strong> is instantiated within an organizational namespace, establishing global governance parameters and binding to a physical repository path (<strong>Repo</strong>) managed by the <em>Git RPC Service</em>.</li>
+<li><strong>Change Initiation (Merge Request):</strong> A developer pushes code modifications and submits a <strong>Merge Request</strong>. The Merge Request records target branch constraints, records the commit <code>SHA</code>, and attaches required code-owner and security approval gates.</li>
+<li><strong>Pipeline Construction &amp; Execution Contract:</strong> The creation or update of a Merge Request triggers the Application Controller to parse the repository configuration file at the target <code>SHA</code>. This constructs a <strong>Pipeline</strong> entity, establishing an immutable execution contract containing an ordered graph of <strong>Job</strong> entities.</li>
+<li><strong>Worker Context Validation:</strong> An isolated <strong>Job Worker</strong> polls the Control Plane, presenting a hashed <strong>Runner Token</strong>. The Application Controller validates token scope, confirms worker authorization, assigns a pending <strong>Job</strong>, and returns a short-lived, job-scoped execution token.</li>
+<li><strong>Execution &amp; Repository Cloning:</strong> The <strong>Job Worker</strong> uses the job token to execute a gRPC clone request against the <strong>Git RPC Service</strong>, fetching source code at the specified commit <code>SHA</code>. The worker then executes configured build scripts and security scanning engines.</li>
+<li><strong>Finding Ingestion &amp; Change Governance:</strong> Vulnerability results generated during scanning are parsed and posted back to the Application Controller as <strong>Finding</strong> entities. Findings are automatically attached to the <strong>Merge Request</strong>, allowing reviewers and security teams to inspect vulnerabilities, enforce compliance rules, and evaluate approval blocks before merging code into protected repository branches.</li>
+</ol>
+<hr />
+<h2>4. Main Logical Integration &amp; Data Flows</h2>
+<h3>4.1 System Interaction Summary Table</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flow Name</th>
+<th style="text-align: left;">Triggering Event</th>
+<th style="text-align: left;">Source -&gt; Destination Components</th>
+<th style="text-align: left;">Payload / Content</th>
+<th style="text-align: left;">Execution Pattern (Synchronous vs. Asynchronous)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Change Ingress &amp; Pipeline Fan-Out</strong></td>
+<td style="text-align: left;">Developer Git push or Merge Request submission</td>
+<td style="text-align: left;">Client -&gt; Front Door -&gt; Application Controller -&gt; System of Record DB -&gt; Job Queue</td>
+<td style="text-align: left;">Git packfiles, commit SHAs, author identity, <code>.gitlab-ci.yml</code> YAML payload</td>
+<td style="text-align: left;">Asynchronous (Push receipt acknowledged synchronously; pipeline compilation and job fan-out queued asynchronously)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Dispatch &amp; Finding Ingestion</strong></td>
+<td style="text-align: left;">Job Worker polls for execution tasks</td>
+<td style="text-align: left;">Job Worker &lt;-&gt; Application Controller &lt;-&gt; Git RPC Service / Artifact Registry</td>
+<td style="text-align: left;">Runner token, job payload, gRPC repo clone, build telemetry, JSON finding streams, binary blobs</td>
+<td style="text-align: left;">Asynchronous (Worker polls via discrete HTTP calls; execution runs independently off-plane)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Synchronous Git RPC Authorization Check Loop</strong></td>
+<td style="text-align: left;">Inbound Git read/write operation over SSH or HTTP</td>
+<td style="text-align: left;">Git RPC Service -&gt; Application Controller Internal API (<code>/api/v4/internal/allowed</code>) -&gt; Git RPC Service</td>
+<td style="text-align: left;">User public key ID, project path, requested action (<code>git-upload-pack</code> or <code>git-receive-pack</code>), protocol</td>
+<td style="text-align: left;">Synchronous Loopback (Hard blocking check before storage access is granted)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AI Prompt &amp; Grounding Flow</strong></td>
+<td style="text-align: left;">User or IDE action requesting AI assistance</td>
+<td style="text-align: left;">User Client / IDE -&gt; Application Controller -&gt; AI Gateway -&gt; Model Runtime</td>
+<td style="text-align: left;">Prompt text, contextual code snippets, user identity metadata, streamed model response completion</td>
+<td style="text-align: left;">Synchronous / Streaming (Blocking or streaming HTTP connection maintained throughout inference)</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 Detailed Sequence Tracing</h3>
+<h4>Flow 1: Change Ingress &amp; Pipeline Fan-Out Flow</h4>
+<pre><code>User Client           Front Door         Application Controller     System of Record DB       Job Queue
+    |                     |                        |                        |                     |
+    |-- HTTPS/SSH Push --&gt;|                        |                        |                     |
+    |   (Git Packfile)    |-- REST/Internal Pass -&gt;|                        |                     |
+    |                     |   (Auth &amp; Payload)     |-- Update Commits/MR --&gt;|                     |
+    |                     |                        |   (SQL Transaction)    |                     |
+    |                     |                        |&lt;-- Confirm State ------|                     |
+    |                     |                        |                                              |
+    |                     |                        |-- Enqueue Pipeline Fan-Out Tasks -----------&gt;|
+    |                     |                        |   (JSON Job Payloads)                        |
+    |&lt;-- Push Accepted ---|&lt;-- Ack Receipt --------|                                              |
+</code></pre>
+<ol>
+<li><strong>Ingress Handling:</strong> A developer issues a Git push or updates a Merge Request. Connections terminate at the <em>HTTP Front Door</em> or <em>SSH Front Door</em> using HTTPS or SSH protocols.</li>
+<li><strong>Context Resolution:</strong> The Front Door routes request parameters to the <em>Application Controller</em>, which validates user credentials against identity rules.</li>
+<li><strong>State Persistence:</strong> The <em>Application Controller</em> updates commit pointers and Merge Request tracking states inside the <em>System of Record DB</em> via transactional SQL queries.</li>
+<li><strong>Configuration Parsing:</strong> The <em>Application Controller</em> retrieves <code>.gitlab-ci.yml</code> file contents at the commit <code>SHA</code> via the <em>Git RPC Service</em>, compiling the pipeline stage dependency graph.</li>
+<li><strong>Asynchronous Job Fan-Out:</strong> The <em>Application Controller</em> inserts discrete <em>Job</em> records into the <em>System of Record DB</em> and dispatches asynchronous job distribution tasks into the <em>Job Queue</em> (pushing job keys into the <em>Session &amp; Cache Store</em> for worker retrieval).</li>
+</ol>
+<h4>Flow 2: Job Dispatch &amp; Finding Ingestion Flow</h4>
+<pre><code>Job Worker            Application Controller         Git RPC Service            Artifact Registry
+    |                           |                           |                           |
+    |-- HTTP REST Poll --------&gt;|                           |                           |
+    |   (Runner Token Hash)     |                           |                           |
+    |&lt;- Return Job Payload -----|                           |                           |
+    |   (Scoped Job Token)      |                           |                           |
+    |                           |                           |                           |
+    |-- gRPC Stream Clone Request -------------------------&gt;|                           |
+    |   (Job Token Auth)        |&lt;-- Synchronous Auth Check-|                           |
+    |                           |    (/api/v4/internal)     |                           |
+    |&lt;-- gRPC Stream Git Packfile Data ---------------------|                           |
+    |                           |                           |                           |
+    | [Executes Scanners/Build] |                           |                           |
+    |                           |                           |                           |
+    |-- HTTP REST Post ---------|                           |                           |
+    |   (Findings &amp; Logs)       |                           |                           |
+    |                           |                           |                           |
+    |-- HTTP REST Push Binary Artifacts -----------------------------------------------&gt;|
+</code></pre>
+<ol>
+<li><strong>Worker Polling:</strong> An isolated <em>Job Worker</em> initiates an HTTP REST polling request to the <em>Application Controller</em>, presenting a hashed <em>Runner Token</em>.</li>
+<li><strong>Payload Assignment:</strong> The <em>Application Controller</em> validates token scope, claims a queued job from the <em>Session &amp; Cache Store</em>, generates a short-lived execution job token, and returns the job specification (environment variables, container image targets, execution scripts) to the worker.</li>
+<li><strong>Code Fetching:</strong> The <em>Job Worker</em> establishes a gRPC connection directly to the <em>Git RPC Service</em>, presenting the job token to stream repository objects at the targeted commit <code>SHA</code>.</li>
+<li><strong>Scanning Execution:</strong> The worker pulls required scanning tools or container images, compiles code, and runs security analyzers (SAST, DAST, dependency analysis, secret detection).</li>
+<li><strong>Finding Ingestion:</strong> Upon execution completion, the worker formats vulnerability results into structured JSON schemas, posting them back to the <em>Application Controller</em> via HTTP REST. The Application Controller parses findings and writes them to the <em>System of Record DB</em> (linking them to the <em>Merge Request</em>).</li>
+<li><strong>Artifact Offloading:</strong> Compiled binary packages and container layers are uploaded over HTTP/REST directly from the <em>Job Worker</em> to the <em>Artifact Registry</em>.</li>
+</ol>
+<h4>Flow 3: Synchronous Git RPC Authorization Check Loop</h4>
+<pre><code>Git RPC Service                 Application Controller Internal API
+      |                                        |
+      |-- Inbound gRPC Request Received -------|
+      |   (User Key ID, Repo Path, Action)     |
+      |                                        |
+      |-- Synchronous HTTP REST Loopback -----&gt;|
+      |   GET /api/v4/internal/allowed         |
+      |                                        |-- (Evaluates Permissions,
+      |                                        |    IP Rules, Protected Branches
+      |                                        |    in System of Record DB)
+      |                                        |
+      |&lt;-- Synchronous JSON Response ----------|
+      |    (Allowed: true/false, Key ID)       |
+      |                                        |
+      | [Process Stream or Abort Request]      |
+</code></pre>
+<ol>
+<li><strong>Storage Interception:</strong> The <em>Git RPC Service</em> receives a gRPC call from an ingress front-door component requesting repository object access (<code>git-upload-pack</code> for reads or <code>git-receive-pack</code> for writes).</li>
+<li><strong>Synchronous Loopback Initiation:</strong> Before executing any POSIX disk operation or modifying Git objects, the <em>Git RPC Service</em> suspends execution and issues a synchronous HTTP REST call back to the <em>Application Controller Internal API</em> at <code>/api/v4/internal/allowed</code>.</li>
+<li><strong>Permission Evaluation:</strong> The <em>Application Controller</em> inspects request parameters—checking user identity, SSH key signatures, project visibility levels, access control lists, and protected branch rules against the <em>System of Record DB</em>.</li>
+<li><strong>Authorization Response:</strong> The Internal API returns a synchronous JSON response (<code>allowed: true</code> or <code>allowed: false</code>) alongside repository shard location metadata.</li>
+<li><strong>Stream Execution or Termination:</strong> If authorized, the <em>Git RPC Service</em> executes the native Git storage operation and streams object packfiles back to the requester. If authorization is denied, the operation terminates immediately and emits an access error.</li>
+</ol>
+<h5>Operational Risk: Thread and Concurrency Dependencies</h5>
+<p>Under high Git concurrency (e.g., massive CI worker fan-out or enterprise push events), this loopback mechanism introduces severe operational risk. <em>Because every inbound Git RPC request requires a synchronous HTTP REST check against <code>/api/v4/internal/allowed</code>, each active Git stream temporarily locks worker and thread capacity on BOTH the Git RPC Service and the Application Controller simultaneously.</em> If web application thread pools (such as Puma worker threads) become saturated, the loopback endpoints experience high queue latency. This creates a cascade effect where Git RPC storage threads block while waiting for internal API approvals, rapidly causing thread starvation, connection pool exhaustion, and system 502/504 gateway failures across the entire Control Plane.</p>
+<h4>Flow 4: AI Prompt &amp; Grounding Flow</h4>
+<pre><code>User Client / IDE        Application Controller           AI Gateway             Model Endpoint
+        |                          |                          |                        |
+        |-- Prompts / Context ----&gt;|                          |                        |
+        |   (HTTPS REST/gRPC)      |-- Assemble Context -----&gt;|                        |
+        |                          |   (Files, Diffs, Policy) |                        |
+        |                          |   (HTTPS / gRPC)         |-- Transmit Prompt ----&gt;|
+        |                          |                          |   (REST API Payload)   |
+        |                          |                          |&lt;-- Return Completion --|
+        |                          |&lt;-- Stream Completion ----|                        |
+        |&lt;-- Stream AI Response ---|    (HTTPS / gRPC)         |                        |
+</code></pre>
+<ol>
+<li><strong>User Request Initiation:</strong> A user triggers an AI capability (such as Duo Code Suggestions, Chat, or Merge Request Summarization) via the web interface or an integrated IDE extension over HTTPS/gRPC.</li>
+<li><strong>Context Grounding:</strong> The <em>Application Controller</em> intercepts the request, retrieves local repository context (file contents, active diffs, issue descriptions, or error logs), sanitizes credentials, and appends identity metadata.</li>
+<li><strong>Gateway Routing:</strong> The <em>Application Controller</em> routes the enriched contextual payload over HTTPS/gRPC to the <em>AI Gateway</em>.</li>
+<li><strong>Model Execution:</strong> The <em>AI Gateway</em> parses the context window and forwards the prompt payload to the configured model runtime (either a vendor-managed cloud LLM or a customer-hosted local inference backend).</li>
+<li><strong>Streaming Response Delivery:</strong> The generated model response streams back through the <em>AI Gateway</em> to the <em>Application Controller</em>, which validates response payload structure and streams the completion back to the client interface.</li>
+</ol>
+<h5>Agentic AI &amp; Government Cloud Boundary Constraints</h5>
+<p>The platform strictly distinguishes between standard context-grounded AI requests (Code Suggestions, Chat, Summarization) and <strong>Agentic AI Workflows</strong> (e.g., Duo Agent Platform foundational agents executing autonomous SDLC tasks). <em>In high-compliance or government cloud boundaries (such as Dedicated for Government), agentic AI workflows and external agent orchestrations are strictly unauthorized and blocked at the Control Plane boundary.</em> In these regulated environments, AI capabilities must be completely isolated to self-hosted AI Gateways communicating exclusively with customer-managed, in-boundary model runtimes (such as Bedrock GovCloud or self-hosted vLLM endpoints).</p>
+<hr />
+<h2>5. Architectural Silence, Gaps, and Boundary Assumptions</h2>
+<h3>5.1 Explicit Silence Register</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architectural Area</th>
+<th style="text-align: left;">Observed Silence / Missing Detail</th>
+<th style="text-align: left;">Impact on Logical Modeling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Front Door Traffic Control</strong></td>
+<td style="text-align: left;">Rate-limiting algorithms, bucket depth parameters, and exact quota metrics at the logical front door (e.g., specific HTTP, REST, or SSH request-per-minute thresholds).</td>
+<td style="text-align: left;">Prevents formal mathematical modeling of maximum burst capacity limits, denial-of-service throttling thresholds, and client queuing backpressure algorithms at the network edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cluster Agent Protocols</strong></td>
+<td style="text-align: left;">Explicit payload schemas, transaction envelope structures, and micro-transaction message specifications for the Cluster Agent (KAS) inbound communication stream.</td>
+<td style="text-align: left;">Leaves the precise logical data structures and state-machine transitions for Kubernetes pull-based GitOps deployment tracking partially undefined.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AI Integration Timeouts</strong></td>
+<td style="text-align: left;">Exact synchronous execution timeout thresholds, retry backoff metrics, and circuit-breaker trigger configurations for external AI model calls across commercial versus air-gapped/government variants.</td>
+<td style="text-align: left;">Precludes deterministic timing analysis for prompt/completion blocking calls in latency-sensitive, air-gapped, or highly restricted network deployment environments.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Slack / Teams Integration Boundaries</strong></td>
+<td style="text-align: left;">Absence of formal specification defining whether third-party notification webhooks (e.g., Slack or Microsoft Teams) fall within Authorized FedRAMP Moderate cloud compliance boundaries.</td>
+<td style="text-align: left;">Forces systems architects to treat external chat notification integrations as out-of-boundary, untrusted egress flows in regulated government deployments.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Hosted FIPS Runner Availability</strong></td>
+<td style="text-align: left;">Lack of definitive specification confirming whether cloud-hosted FIPS-validated runner SKUs exist natively within government cloud tenant boundaries.</td>
+<td style="text-align: left;">Mandates the architectural assumption that government tenants must deploy and manage external, customer-hosted FIPS runner fleets outside the primary Control Plane boundary.</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 Boundary Assumptions &amp; Constraints</h3>
+<p>Enforced strictly by the underlying source context, the platform's logical architecture relies on the following structural assumptions and system constraints:</p>
+<ol>
+<li><strong>Job Plane Security Isolation Rule:</strong> Job Workers process untrusted code and must remain logically and physically isolated from the Control Plane trust domain. Workers are strictly barred from holding direct network access to the System of Record DB (PostgreSQL), Session &amp; Cache Store (Redis), or internal raw repository storage mounts.</li>
+<li><strong>Secret Scope and Rotation Constraint:</strong> Runner Tokens and job execution tokens utilized by worker agents must be cryptographically hashed, scoped strictly to specific project/pipeline execution contexts, short-lived, and regularly rotated to prevent token-theft privilege escalation.</li>
+<li><strong>Mandatory Internal Auth Loopback:</strong> The Git RPC Service cannot grant repository access autonomously. It must synchronously query the Application Controller Internal API (<code>/api/v4/internal/allowed</code>) for every Git read or write operation prior to processing POSIX storage requests.</li>
+<li><strong>Decoupled Repository Access:</strong> Web application controllers are prohibited from mounting repository disks directly or invoking raw filesystem commands. All repository access must pass through encapsulated gRPC abstractions managed by the Git RPC Service.</li>
+<li><strong>Agentic AI &amp; Government Cloud Boundary Rules:</strong> On government cloud boundaries (such as Dedicated for Government), managed AI paths to external vendor LLMs and Duo Agent Platform foundational agent workflows are strictly unauthorized. AI integrations must be hard-isolated to self-hosted AI Gateways connected to approved in-boundary model runtimes.</li>
+<li><strong>Storage Topology Isolation Constraint:</strong> While Self-Managed deployment architectures may employ virtual storage clustering using Praefect (Gitaly Cluster) for repository high-availability, Dedicated cloud offerings (including Dedicated for Government) explicitly mandate <strong>Sharded Git RPC storage without Praefect</strong>, distributing repositories across independent storage nodes without virtual cluster abstraction layers.</li>
+</ol>
+</article>
+</body>
+</html>

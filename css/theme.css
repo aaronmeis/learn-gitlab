@@ -26,7 +26,53 @@ html[data-theme="light"] {
 .btn-primary, .btn.primary { background:#ffd400 !important; color:#000 !important; border-color:#e6bf00 !important; }
 html[data-theme="light"] .bg-watermark { opacity:.04; }
 html[data-theme="light"] .mobile-header, html[data-theme="light"] .sidebar { background:var(--bg-sidebar); }
-html[data-theme="light"] .tag-badge, html[data-theme="light"] .sidebar-badge { filter:saturate(.9) brightness(.75); }
+/* Light theme: stronger pill contrast (no dimming filter — that made gray chips unreadable). */
+html[data-theme="light"] .tag-badge {
+  background: #fff8d6;
+  border-color: #c9a400;
+  color: #3d3200;
+  font-weight: 700;
+}
+html[data-theme="light"] .tag-badge.gitlab {
+  background: #fff3b0;
+  border-color: #b38f00;
+  color: #2a2200;
+}
+html[data-theme="light"] .tag-badge.fedramp {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0c4a6e;
+}
+html[data-theme="light"] .tag-badge.gov {
+  background: #d1fae5;
+  border-color: #059669;
+  color: #064e3b;
+}
+html[data-theme="light"] .tag-badge.tag-time {
+  background: #f1f5f9;
+  border-color: #64748b;
+  color: #0f172a;
+}
+html[data-theme="light"] .rung-badge.rung-100 {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #075985;
+}
+html[data-theme="light"] .rung-badge.rung-200 {
+  background: #ede9fe;
+  border-color: #7c3aed;
+  color: #5b21b6;
+}
+html[data-theme="light"] .rung-badge.rung-300 {
+  background: #ffe4e6;
+  border-color: #e11d48;
+  color: #9f1239;
+}
+html[data-theme="light"] .sidebar-badge {
+  background: #fff3b0;
+  border-color: #b38f00;
+  color: #2a2200;
+}
 .theme-toggle { background:var(--bg-surface); color:var(--text-primary); border:1px solid var(--border-default); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font:inherit; font-size:.85rem; }
 .theme-toggle:hover { border-color:var(--sel-border); }
 .theme-toggle:focus-visible { outline:2px solid var(--sel-border); outline-offset:2px; }

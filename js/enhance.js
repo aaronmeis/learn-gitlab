@@ -324,6 +324,34 @@
   function initFlashcards() {
     flashcardIndex = 0;
     renderFlashcard();
+    window.removeEventListener('keydown', handleFlashcardKey);
+    window.addEventListener('keydown', handleFlashcardKey);
+  }
+
+  function flashcardsVisible() {
+    const fv = document.getElementById('flashcard-view');
+    return fv && fv.style.display !== 'none' && window.location.hash === '#/practice';
+  }
+
+  function handleFlashcardKey(e) {
+    if (!flashcardsVisible()) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      flipFlashcard();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextFlashcard();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevFlashcard();
+    }
+  }
+
+  function flipFlashcard() {
+    const inner = document.querySelector('#flashcard-view .flashcard-inner');
+    if (inner) inner.classList.toggle('flipped');
   }
 
   function renderFlashcard() {
@@ -342,12 +370,12 @@
           <span style="font-family:var(--font-mono);font-size:.85rem;color:var(--text-secondary);">Card ${flashcardIndex + 1} of ${terms.length}</span>
         </div>
 
-        <div class="flashcard-box" onclick="this.querySelector('.flashcard-inner').classList.toggle('flipped')">
+        <div class="flashcard-box" onclick="window.EnhanceEngine.flipFlashcard()">
           <div class="flashcard-inner">
             <div class="flashcard-face flashcard-front">
               <span class="rung-badge rung-${term.rung}" style="margin-bottom:1rem;">Rung ${term.rung}</span>
               <h2 style="font-size:1.8rem;font-weight:800;color:var(--text-primary);">${term.term}</h2>
-              <div style="color:var(--text-muted);font-size:.85rem;margin-top:1.5rem;">Click to reveal architectural definition</div>
+              <div style="color:var(--text-muted);font-size:.85rem;margin-top:1.5rem;">Space or click to reveal definition</div>
             </div>
             <div class="flashcard-face flashcard-back">
               <p style="font-size:1.05rem;line-height:1.6;color:var(--text-primary);">${term.definition}</p>
@@ -356,8 +384,9 @@
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-sm" onclick="window.EnhanceEngine.prevFlashcard()" ${flashcardIndex === 0 ? 'disabled' : ''}>◀ Previous</button>
+          <span style="font-size:.8rem;color:var(--text-muted);">Space = flip · ← → = navigate</span>
           <button class="btn btn-sm btn-primary" onclick="window.EnhanceEngine.nextFlashcard()" ${flashcardIndex === terms.length - 1 ? 'disabled' : ''}>Next Card ▶</button>
         </div>
       </div>
@@ -479,6 +508,7 @@
     nextQuestion,
     restartQuiz,
     initFlashcards,
+    flipFlashcard,
     nextFlashcard,
     prevFlashcard,
     initFailures,

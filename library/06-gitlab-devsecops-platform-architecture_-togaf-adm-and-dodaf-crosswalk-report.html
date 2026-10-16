@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitLab DevSecOps Platform Architecture: TOGAF ADM and DoDAF Crosswalk Report</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>GitLab DevSecOps Platform Architecture: TOGAF ADM and DoDAF Crosswalk Report</h1>
+<hr />
+<h3>1. Framework Alignment Strategy &amp; Grounding Rules</h3>
+<p>This architectural crosswalk report establishes a formal, rigorous mapping between the <strong>GitLab DevSecOps Platform Architecture</strong> and two standard enterprise architecture frameworks: the <strong>TOGAF Architecture Development Method (ADM)</strong> and the <strong>Department of Defense Architecture Framework (DoDAF)</strong>. </p>
+<p>To maintain methodological discipline and fulfill defense information systems governance requirements, this report executes a two-step crosswalk alignment strategy:<br />
+1. <strong>TOGAF ADM Phase Alignment</strong>: Platform capabilities, components, system boundaries, and technology realizations are mapped across TOGAF ADM Phase A (Architecture Vision), Phase B (Business Architecture), Phase C (Information Systems Architectures — Data and Application), and Phase D (Technology Architecture).<br />
+2. <strong>DoDAF Viewpoint Deconstruction</strong>: Platform structural and operational attributes are operationalized into specific DoDAF viewpoints, encompassing Operational Viewpoints (OV-1, OV-2, OV-5b), System Viewpoints (SV-1, SV-2, SV-4, SV-6), Data and Information Viewpoints (DIV-1, DIV-2, DIV-3), and Standards Viewpoints (StdV-1).</p>
+<p>To eliminate architectural ambiguity and prevent boundary confusion between conceptual abstractions and concrete implementations, all analysis is explicitly partitioned across three distinct architectural <strong>altitudes</strong>:</p>
+<ul>
+<li><strong>Conceptual Altitude</strong>: Vendor-neutral definition of "what" the system accomplishes and "why." It details broad business capabilities, organizational actors, and high-level domain concepts without citing specific product SKUs, commercial software names, execution binaries, physical hardware specs, or cloud hosting regions.</li>
+<li><strong>Logical Altitude</strong>: Vendor-neutral component decompositions, data entity schemas, system interface boundaries, and operational interaction flows. It defines functional responsibilities, inputs, outputs, data relationships, and synchronicity while retaining abstract, non-proprietary terminology.</li>
+<li><strong>Physical Altitude</strong>: Concrete, as-built software realizations and deployment topologies. It explicitly identifies physical software binaries and runtime services (e.g., Puma, Workhorse, Sidekiq, Gitaly, PostgreSQL, Redis, Runner, KAS), commercial deployment options (GitLab.com, Self-Managed, Dedicated, Dedicated for Government), cloud provider infrastructure (e.g., AWS GovCloud US-West), and accredited security authorization boundaries (e.g., FedRAMP Moderate ATO FR2411959145).</li>
+</ul>
+<pre><code>+---------------------------------------------------------------------------------+
+|                              ARCHITECTURAL ALTITUDES                            |
++---------------------------------------------------------------------------------+
+| CONCEPTUAL ALTITUDE  | Vendor-neutral capabilities, actors, and vision.         |
+|                      | (No SKUs, product names, or hosting regions)             |
++----------------------+----------------------------------------------------------+
+| LOGICAL ALTITUDE     | System decompositions, data entities, and flows.         |
+|                      | (Inputs/outputs, responsibilities, interface bounds)     |
++----------------------+----------------------------------------------------------+
+| PHYSICAL ALTITUDE    | As-built binaries, offerings, and security boundaries.   |
+|                      | (Puma, Gitaly, PostgreSQL, FedRAMP ATO FR2411959145)    |
++---------------------------------------------------------------------------------+
+</code></pre>
+<h4>Grounding &amp; Source Silence Rules</h4>
+<p>This report enforces absolute fidelity to the underlying source context <code>[S1]–[S20]</code>. Every capability claim, technical attribute, system interface, and compliance statement is grounded strictly in source data. Where the source context does not provide explicit technical specifications or formal mappings to a requested DoDAF viewpoint, TOGAF phase, physical binary, or deployment variant, the missing element is explicitly designated as <strong><code>SILENT / UNSUPPORTED IN SOURCES</code></strong>. External assumptions, unverified market claims, and extrapolated vendor claims have been systematically excluded.</p>
+<hr />
+<h3>2. Master Framework Crosswalk Matrix</h3>
+<p>The master table below cross-references all functional capabilities, logical data entities, application services, and physical infrastructure components identified in the source context. It maps each element across architectural altitudes, TOGAF ADM phases, DoDAF viewpoints, deployment offering scopes, and primary source anchors.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Platform Element / Capability / Component</th>
+<th style="text-align: left;">Altitude</th>
+<th style="text-align: left;">TOGAF ADM Phase</th>
+<th style="text-align: left;">DoDAF Viewpoint</th>
+<th style="text-align: left;">Deployment Offering Scope</th>
+<th style="text-align: left;">Source Grounding &amp; Silence Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Governed Software Change Path / Change Record</strong></td>
+<td style="text-align: left;">Conceptual</td>
+<td style="text-align: left;">Phase A: Architecture Vision, Phase B: Business</td>
+<td style="text-align: left;">OV-1, DIV-1</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Core capability establishing a single system of record for code, pipeline evidence, and security findings <code>[S1, S2, S4]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pipeline Contract &amp; Job Execution Boundary</strong></td>
+<td style="text-align: left;">Conceptual / Logical</td>
+<td style="text-align: left;">Phase B: Business, Phase C: Application</td>
+<td style="text-align: left;">OV-2, OV-5b, SV-1</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Defines job sequence execution and enforces strict trust separation between Control Plane and Job Plane <code>[S2, S3]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Project (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Namespace container owning repositories, pipelines, and compliance rules <code>[S1, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Merge Request (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Primary unit of software change containing diffs, review threads, and gate evaluations <code>[S1, S2]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pipeline (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Execution contract instantiated for a specific Git SHA commit <code>[S2]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Discrete execution task assigned to a worker node <code>[S2, S3]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Finding (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Normalized security vulnerability record with severity and location metadata <code>[S4]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runner Token (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Scoped authentication credential establishing worker trust with Control Plane <code>[S3, S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Repo (Data Entity)</strong></td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Phase C: Data Architecture</td>
+<td style="text-align: left;">DIV-2</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Bare Git storage unit mapped to a project <code>[S5]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>HTTP Front Door (NGINX + Workhorse)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Terminates TLS, handles HTTP/API routing, intercepts long-running requests, offloads artifact uploads directly to S3 <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SSH Front Door (GitLab Shell / OpenSSH)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Manages SSH authentication; routes Git SSH traffic to Gitaly via internal API checks <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Application Control Plane (Rails / Puma)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Multi-threaded Ruby web application on Puma server; enforces policy, authorization, and UI/API logic <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Ruby Rack Middleware (rack-attack, rack-timeout)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-4</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Middleware layer sitting between Puma and Rails for rate throttling and early request execution termination <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Background Job Queue (Sidekiq)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Asynchronous background task engine executing identical Rails application code <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Session &amp; In-Memory Store (Redis)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">High-speed memory store for session state, rate-limiting counters, and Sidekiq job queues <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>System of Record Database (PostgreSQL)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-4, DIV-3, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Central relational database (<code>gitlabhq_production</code>) storing core application entities <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git RPC Service &amp; Storage (Gitaly)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4, DIV-3, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Encapsulates disk access to bare Git repos via gRPC; enforces 57s execution deadline without killing child git processes <code>[S5, S15, S16, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gitaly HA: Praefect Cluster</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4</td>
+<td style="text-align: left;">Self-Managed Only</td>
+<td style="text-align: left;">High-availability virtual storage router with SQL-backed transaction manager for Self-Managed instances <code>[S5]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Gitaly HA: Sharded Gitaly</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4</td>
+<td style="text-align: left;">Dedicated, Dedicated for Government</td>
+<td style="text-align: left;">Storage architecture deployed on Dedicated platforms; <strong>Praefect is explicitly not used</strong> <code>[S6, S7]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Execution Plane (GitLab Runner)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-2, SV-4, SV-6</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Isolated execution agent. On Dedicated for Gov, must be customer self-managed FIPS runners <em>outside</em> tenant <code>[S3, S8, S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Artifact &amp; Container Registries</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-4, DIV-3</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Native object storage components for container blobs and language packages <code>[S1, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kubernetes Cluster Agent (KAS)</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-2</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">Inbound cluster-to-control plane agent for GitOps and deployment synchronization <code>[S1]</code> <em>(Gov PA status silent)</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab-Managed AI Gateway</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-2</td>
+<td style="text-align: left;">GitLab.com, Dedicated, Self-Managed</td>
+<td style="text-align: left;">SaaS AI path routing prompts to vendor LLMs (Anthropic, Google, OpenAI) <code>[S12]</code> <em>(Not authorized on Gov)</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Self-Hosted AI Gateway</strong></td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Phase D: Technology</td>
+<td style="text-align: left;">SV-1, SV-2</td>
+<td style="text-align: left;">Self-Managed, Dedicated for Government</td>
+<td style="text-align: left;">In-boundary AI execution routing prompts to customer-hosted local models <code>[S13]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Enterprise / Agency Identity Integration</strong></td>
+<td style="text-align: left;">Logical / Physical</td>
+<td style="text-align: left;">Phase B: Business, Phase D: Technology</td>
+<td style="text-align: left;">StdV-1, SV-1</td>
+<td style="text-align: left;">All Offerings</td>
+<td style="text-align: left;">SAML/OIDC federated SSO. PIV/CAC support on Gov is routed via agency IdP, not native PIV stack <code>[S8, S9]</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3. TOGAF ADM Phase Mapping &amp; Detailed Analysis</h3>
+<pre><code>+---------------------------------------------------------------------------------+
+|                                 TOGAF ADM PHASES                                |
++----------------------------------------+----------------------------------------+
+| Phase A: Architecture Vision           | Phase B: Business Architecture         |
+| • Single governed change path          | • Human &amp; organizational actors        |
+| • Unified system of record             | • Core capabilities (C1-C9)            |
+| • Isolation vs multi-tenant baselines  | • Separation of trust domains          |
++----------------------------------------+----------------------------------------+
+| Phase C: Information Systems           | Phase D: Technology Architecture       |
+| • Vendor-neutral logical components    | • As-built physical binaries           |
+| • Logical data entities &amp; relationships| • Infrastructure execution topologies  |
+| • System interface boundaries          | • Middleware &amp; process lifecycle rules |
++----------------------------------------+----------------------------------------+
+</code></pre>
+<h4>3.1 Phase A: Architecture Vision</h4>
+<p>Phase A defines the high-level strategic capability requirements and problem domain for enterprise DevSecOps deployment, framed strictly at the conceptual altitude.</p>
+<h5>Problem Statement</h5>
+<p>In un-integrated enterprise development environments, source control management, continuous integration execution, vulnerability scanning, and package hosting operate in disconnected tool silos. This fragmentation prevents compliance teams and auditors from establishing an immutable change record linking intent to production deployment. Furthermore, build execution engines frequently execute arbitrary code on computing resources outside the immediate control plane, introducing severe risk if the trust boundary between application management and job execution is improperly structured <code>[S1, S3]</code>.</p>
+<h5>Strategic Purpose &amp; Value Proposition</h5>
+<p>The strategic vision of the platform is to establish a <strong>single governed change path from intent to running software</strong> <code>[S1, S20]</code>. By unifying source code management, pipeline orchestration, artifact storage, and application security testing into one operational system of record, the platform eliminates toolchain fragmentation, enforces non-bypassable policy gates, and automatically captures supply chain evidence across the software development lifecycle <code>[S1, S2, S4]</code>.</p>
+<h5>Baseline Deployment Strategy &amp; Isolation Requirements</h5>
+<p>Achieving this vision requires matching the platform's operational deployment model to the target enterprise's data classification and compliance governance requirements <code>[S1, S7, S8]</code>:<br />
+* <strong>Multi-Tenant SaaS Baseline</strong>: Suitable for commercial workloads requiring low operational overhead, where shared infrastructure hosting meets organizational risk acceptance criteria <code>[S1]</code>.<br />
+* <strong>Single-Tenant Cloud Baseline</strong>: Required for enterprise workloads demanding full network, storage, and computing isolation within a dedicated, managed cloud tenant <code>[S6, S7]</code>.<br />
+* <strong>Customer-Operated Baseline</strong>: Mandated for air-gapped, high-assurance, or sovereign environments where the operating organization must retain total operational control over infrastructure, keys, and networking <code>[S1, S14]</code>.</p>
+<h4>3.2 Phase B: Business Architecture</h4>
+<p>Business Architecture defines the enterprise human actors, organizational roles, trust expectations, and core capabilities realized by the platform.</p>
+<h5>Human and Organizational Actors</h5>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Actor</th>
+<th style="text-align: left;">Organizational Role</th>
+<th style="text-align: left;">Core Goal</th>
+<th style="text-align: left;">System Trust Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Developer</strong></td>
+<td style="text-align: left;">Authors source code, infrastructure declarations, and pipeline specifications</td>
+<td style="text-align: left;">Land reviewed and compliant code changes into target environments</td>
+<td style="text-align: left;">Low (Untrusted until peer review and policy gate validation) <code>[S1]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reviewer</strong></td>
+<td style="text-align: left;">Evaluates proposed code modifications</td>
+<td style="text-align: left;">Review code quality, build logs, and security findings on a single change record</td>
+<td style="text-align: left;">Medium <code>[S1]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Security Officer</strong></td>
+<td style="text-align: left;">Defines security policy and compliance rulepacks</td>
+<td style="text-align: left;">Enforce non-bypassable scan policy gates and monitor vulnerability triage</td>
+<td style="text-align: left;">High for policy definition; untrusted for direct production code execution <code>[S4]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Platform Operator</strong></td>
+<td style="text-align: left;">Manages the application control plane</td>
+<td style="text-align: left;">Maintain platform uptime, data persistence, and identity integration</td>
+<td style="text-align: left;">High within the Control Plane tenant boundary <code>[S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Operator</strong></td>
+<td style="text-align: left;">Provisions infrastructure hosting worker nodes</td>
+<td style="text-align: left;">Maintain isolated, token-rotated, and hardened build execution nodes</td>
+<td style="text-align: left;">High within Job Plane; frequently deployed <em>outside</em> Control Plane tenant <code>[S3, S8, S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Identity Provider (IdP)</strong></td>
+<td style="text-align: left;">Authenticates user identities and passes assertions</td>
+<td style="text-align: left;">Assert identity, group memberships, and hardware token validation</td>
+<td style="text-align: left;">High external identity authority <code>[S8]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Authorizing Official (AO)</strong></td>
+<td style="text-align: left;">Evaluates risk posture and system compliance</td>
+<td style="text-align: left;">Issue an explicit Authorization to Operate (ATO) letter for the system</td>
+<td style="text-align: left;">Highest enterprise compliance authority <code>[S10]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Auditor</strong></td>
+<td style="text-align: left;">Performs regulatory sampling and compliance verification</td>
+<td style="text-align: left;">Reconstruct historical software change lineage and supply chain evidence</td>
+<td style="text-align: left;">Independent read-only authority <code>[S1, S9]</code></td>
+</tr>
+</tbody>
+</table>
+<h5>Core Business Capabilities (C1–C9)</h5>
+<ul>
+<li><strong>C1: Change Record Management</strong>: Delivers a single, immutable entity (Merge Request) containing code diffs, review threads, pipeline execution records, and security approvals <code>[S1, S2]</code>.</li>
+<li><strong>C2: Pipeline Contract Execution</strong>: Enforces a declared sequence of stages, jobs, and execution scripts defined in version-controlled YAML specifications (<code>.gitlab-ci.yml</code>) <code>[S2]</code>.</li>
+<li><strong>C3: Job Execution Isolation</strong>: Ensures untrusted job code executes strictly on isolated worker infrastructure rather than within the application control plane <code>[S3]</code>.</li>
+<li><strong>C4: Finding Record Management</strong>: Automatically aggregates, triages, and tracks security vulnerabilities generated by static, dynamic, and container scanners <code>[S4]</code>.</li>
+<li><strong>C5: Artifact Storage</strong>: Manages compiled binaries, language packages, and container images co-located with source code references <code>[S1]</code>.</li>
+<li><strong>C6: Git Storage Abstraction</strong>: Mediates repository read/write operations through gRPC interfaces, preventing application web nodes from directly mounting raw repository disks <code>[S5]</code>.</li>
+<li><strong>C7: Offering Choice Realization</strong>: Delivers uniform platform capabilities across multi-tenant SaaS, single-tenant managed cloud, and customer-operated deployments <code>[S7, S8]</code>.</li>
+<li><strong>C8: Identity Handoff</strong>: Integrates with enterprise federated identity infrastructure for single sign-on and hardware token verification <code>[S8]</code>.</li>
+<li><strong>C9: AI-Assisted Development</strong>: Embeds generative AI models into developer workflows governed by explicit data-boundary controls <code>[S12, S13]</code>.</li>
+</ul>
+<h4>3.3 Phase C: Information Systems Architectures (Data and Application)</h4>
+<h5>Vendor-Neutral Logical Components</h5>
+<ul>
+<li><strong>HTTP Front Door</strong>: Terminates incoming TLS connections, performs web request routing, and handles Git-over-HTTP requests.</li>
+<li><strong>SSH Front Door</strong>: Manages SSH connection handshakes, authenticates public keys, and routes Git-over-SSH operations.</li>
+<li><strong>Application Engine</strong>: Manages project structures, authorization matrices, merge requests, CI logic, and administrative configurations.</li>
+<li><strong>Job Queue Manager</strong>: Coordinates asynchronous background tasks, notification processing, repository imports, and pipeline job dispatching.</li>
+<li><strong>Session &amp; Cache Store</strong>: Maintains active user web sessions, transient settings caches, rate-limiting counters, and rapid key-value lookups.</li>
+<li><strong>System of Record Database</strong>: Persists relational data tables including users, project structures, pipeline statuses, vulnerabilities, and settings.</li>
+<li><strong>Git RPC Service</strong>: Encapsulates repository storage filesystems; executes Git commands on disk and returns structured responses over RPC interfaces.</li>
+<li><strong>Job Execution Worker</strong>: Clones repositories, pulls container images, executes build scripts, generates vulnerability reports, and uploads artifacts.</li>
+<li><strong>Artifact Registry Store</strong>: Holds compiled container blobs, language packages, and pipeline build artifacts.</li>
+<li><strong>Cluster Agent Service</strong>: Maintains persistent inbound connections from remote Kubernetes clusters for GitOps synchronization and deployment monitoring.</li>
+<li><strong>AI Gateway Service</strong>: Intercepts AI prompt contexts from user interfaces/IDEs and routes prompts to approved local or external LLMs.</li>
+</ul>
+<h5>Logical Data Entities and Relationships</h5>
+<ul>
+<li><strong>Project</strong>: Core namespace entity owning repositories, pipelines, issues, and security policy sets.</li>
+<li><strong>Merge Request</strong>: Primary change record unit containing code diffs, peer approvals, and pipeline execution triggers. Linked 1-to-many with Pipelines.</li>
+<li><strong>Pipeline</strong>: Workflow contract instantiated for a specific Git SHA commit. Linked 1-to-many with Jobs.</li>
+<li><strong>Job</strong>: Discrete execution task running specified scripts within a container image on an assigned worker node. Linked 1-to-many with Findings.</li>
+<li><strong>Finding</strong>: Discrete vulnerability record containing severity rating, scanner source, and triage state.</li>
+<li><strong>Runner Token</strong>: High-security authentication credential scope establishing worker node trust with the Control Plane.</li>
+<li><strong>Repo</strong>: Bare Git storage filesystem structure mapped directly to a single Project.</li>
+</ul>
+<h4>3.4 Phase D: Technology Architecture</h4>
+<p>Technology Architecture details the concrete software binaries, middle-layer execution mechanics, infrastructure topologies, and physical deployment options.</p>
+<pre><code>+---------------------------------------------------------------------------------+
+|                        PHYSICAL CONTROL PLANE TOPOLOGY                          |
+|                                                                                 |
+|   +-------------------------------------------------------------------------+   |
+|   |                        HTTP / SSH FRONT DOORS                           |   |
+|   |                  NGINX  |  Workhorse  |  GitLab Shell                   |   |
+|   +-------------------------------------------------------------------------+   |
+|                                        |                                        |
+|                                        v                                        |
+|   +-------------------------------------------------------------------------+   |
+|   |                       APPLICATION CONTROL PLANE                         |   |
+|   |             Puma Rack Server  --&gt;  Ruby Rack Middleware                 |   |
+|   |             (rack-attack throttling  |  rack-timeout)                     |   |
+|   |                                    |                                        |
+|   |                                    v                                        |
+|   |                              GitLab Rails                                   |   |
+|   +-------------------------------------------------------------------------+   |
+|          |                             |                             |          |
+|          v                             v                             v          |
+|   +--------------+             +---------------+             +--------------+   |
+|   |  BACKGROUND  |             |  IN-MEMORY    |             |  SYSTEM OF   |   |
+|   |  JOB QUEUE   |             |  CACHE STORE  |             |  RECORD DB   |   |
+|   |   Sidekiq    |             |    Redis      |             | PostgreSQL   |   |
+|   +--------------+             +---------------+             +--------------+   |
+|          |                             |                                        |
+|          +-----------------------------+                                        |
+|                                        |                                        |
+|                                        v                                        |
+|   +-------------------------------------------------------------------------+   |
+|   |                             GIT RPC SERVICE                             |   |
+|   |          Gitaly  (HA: Praefect Cluster OR Sharded Gitaly)               |   |
+|   +-------------------------------------------------------------------------+   |
++---------------------------------------------------------------------------------+
+</code></pre>
+<h5>Physical Service Binaries &amp; Middle-Layer Execution Mechanics</h5>
+<ul>
+<li><strong>NGINX Proxy</strong>: External reverse proxy terminating ingress TLS, enforcing web server routing, and forwarding HTTP requests <code>[S17]</code>.</li>
+<li><strong>GitLab Workhorse</strong>: Dedicated Reverse Proxy daemon written in Go sitting between NGINX and Puma. Workhorse intercepts long-running requests, raw file downloads, and heavy HTTP payloads. <strong>Artifact Direct-Upload Bypass</strong>: Workhorse intercepts large runner artifact upload payloads and streams them directly to Object Storage (S3), bypassing the Rails application entirely to prevent blocking multi-threaded Puma web workers <code>[S17]</code>.</li>
+<li><strong>GitLab Shell</strong>: Go component managing SSH connection handshakes, verifying user SSH keys via internal Rails API calls, and piping Git SSH traffic directly to Gitaly <code>[S17]</code>.</li>
+<li><strong>GitLab Rails / Puma Rack Server</strong>: Multi-threaded Ruby on Rails application running on the Puma web server. Puma utilizes the <code>puma_worker_killer</code> gem to recycle worker processes when RAM consumption exceeds pre-set thresholds <code>[S17]</code>.</li>
+<li><strong>Ruby Rack Middleware Stack</strong>: Sits directly between Puma and the Rails application framework. Middlewares like <code>rack-attack</code> (rate throttling) and <code>rack-timeout</code> process incoming HTTP environments early. If <code>rack-attack</code> blocks a client due to rate limits, execution halts immediately in middleware, meaning rejected requests do not hit Rails application logic and do not appear in <code>production_json.log</code> <code>[S17]</code>.</li>
+<li><strong>Sidekiq</strong>: Multi-threaded background processing engine executing asynchronous tasks using an identical Rails application configuration <code>[S17]</code>.</li>
+<li><strong>Redis</strong>: In-memory key-value data store managing user web session states, settings caches, <code>rack-attack</code> counters, and Sidekiq background queues <code>[S17]</code>.</li>
+<li><strong>PostgreSQL</strong>: Relational database maintaining the central <code>gitlabhq_production</code> database schema <code>[S17]</code>.</li>
+<li><strong>Gitaly RPC Daemon</strong>: High-performance Go service encapsulating all raw Git disk storage operations over gRPC interfaces <code>[S5, S15, S16]</code>.</li>
+<li><strong>57-Second Timeout &amp; Child Process Persistence</strong>: Gitaly's gRPC execution deadline is hard-coded to 57 seconds (calculated as exactly 95% of Puma's 60-second request timeout) to prevent runaway Git operations from starving Puma workers. Crucially, when Puma times out after 60s and returns a deadline error to the client, <strong>Gitaly does not terminate the underlying child <code>git</code> process on disk</strong>; the child process continues running to completion, which can cause persistent disk I/O load even after the HTTP request is cancelled <code>[S17]</code>.</li>
+</ul>
+<h5>Infrastructure Architecture Variants &amp; High Availability Topologies</h5>
+<ul>
+<li><strong>Gitaly High Availability Options</strong>: On <strong>Self-Managed</strong> deployments, high availability is implemented using <strong>Gitaly Cluster with Praefect</strong> (a SQL-backed virtual storage routing daemon) <code>[S5]</code>. On <strong>Dedicated</strong> and <strong>Dedicated for Government</strong> cloud platforms, Gitaly is deployed in a <strong>Sharded Gitaly</strong> topology where repositories are distributed across discrete storage VMs; <strong>Praefect is explicitly not used</strong> <code>[S6, S7]</code>.</li>
+<li><strong>Cloud Native Hybrid</strong>: On Self-Managed Kubernetes deployments (Helm), stateless components (Puma, Sidekiq, Workhorse) execute inside Kubernetes pods, while stateful services (<strong>Gitaly and Gitaly Cluster</strong>) must remain deployed on traditional Virtual Machines <code>[S14]</code>.</li>
+</ul>
+<hr />
+<h3>4. DoDAF Viewpoint Deconstruction</h3>
+<h4>4.1 Operational Viewpoints (OV-1, OV-2, OV-5b)</h4>
+<h5>OV-1: High-Level Operational Concept</h5>
+<p>The operational concept centers on enforcing a rigid separation of trust between administrative policy management and build execution. Developers, Reviewers, and Security Officers interface with the Application Control Plane to manage source code, execute code reviews, and set non-bypassable scan policy gates. The Control Plane dispatches pipeline execution contracts to an external Job Execution Plane. Isolated workers pull source code via RPCs, execute build/security scripts, upload build artifacts directly to Object Storage, and push vulnerability findings back to the Control Plane. External Identity Providers validate human actors, while Authorizing Officials review system evidence to issue operational compliance approvals.</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+|                        OV-1 OPERATIONAL CONCEPT BOUNDARY                          |
+|                                                                                   |
+|  +--------------------+                                                           |
+|  |    ORGANIZATION    |                                                           |
+|  |  Developer         |                                                           |
+|  |  Reviewer          |----( HTTPS / SAML / OIDC )-----+                          |
+|  |  Security Officer  |                                |                          |
+|  +--------------------+                                v                          |
+|                                              +-------------------+                |
+|  +--------------------+                      |   CONTROL PLANE   |                |
+|  | IDENTITY PROVIDER  |=====================&gt;|  Change Records   |                |
+|  |  Agency IdP / PIV  |                      |  Pipeline Specs   |                |
+|  +--------------------+                      |  Security Policy  |                |
+|                                              +-------------------+                |
+|                                                |               ^                  |
+|                                       (Job Contract)      (Findings/Logs)         |
+|                                                v               |                  |
+|  +--------------------+                      +-------------------+                |
+|  |AUTHORIZING OFFICIAL|                      |     JOB PLANE     |                |
+|  |   (ATO Approval)   |.....................&gt;| Isolated Workers  |                |
+|  +--------------------+                      +-------------------+                |
++-----------------------------------------------------------------------------------+
+</code></pre>
+<h5>OV-2 &amp; OV-5b: Operational Resource Flow and Activity Model</h5>
+<ol>
+<li><strong>Initiate Change</strong>: Developer authenticates via enterprise IdP and pushes code commits to the HTTP/SSH Front Door.</li>
+<li><strong>Evaluate Policy</strong>: Application Control Plane intercepts commit, instantiates Merge Request change record, and evaluates security policy rules.</li>
+<li><strong>Dispatch Contract</strong>: Control Plane enqueues pipeline execution contract into Redis / Sidekiq Job Queue.</li>
+<li><strong>Acquire Job</strong>: Isolated Execution Worker polls Control Plane, receives job payload alongside a scoped, short-lived job token.</li>
+<li><strong>Execute Task</strong>: Worker clones repo via Git RPC, runs compilation/scanners, and generates output artifacts.</li>
+<li><strong>Return Evidence</strong>: Worker streams execution logs and writes vulnerability Findings back to Application Control Plane; streams build artifacts directly to Object Storage via Workhorse bypass.</li>
+<li><strong>Gate Approval</strong>: Reviewer and Security Officer evaluate unified Merge Request evidence; merge is permitted only if policy conditions pass.</li>
+</ol>
+<h4>4.2 System Viewpoints (SV-1, SV-2, SV-4, SV-6)</h4>
+<h5>SV-1 &amp; SV-2: Systems Interface &amp; Resource Flow Description</h5>
+<p>The primary structural system boundary exists between the <strong>Application Control Plane</strong> and the <strong>Job Execution Plane</strong>. These domains represent separate trust domains. Workers in the Job Execution Plane must never possess direct administrative access to Control Plane infrastructure, database instances, or underlying repository disks <code>[S3]</code>. All communication from workers to the Control Plane occurs outbound over HTTPS/API links using transient job tokens <code>[S3, S9]</code>.</p>
+<h5>SV-4: Systems Functionality Description</h5>
+<ul>
+<li><strong>Puma / Rails</strong>: Executes API/UI business logic, evaluates security policies, calculates access authorization matrices.</li>
+<li><strong>Workhorse</strong>: Offloads long-running HTTP requests, processes Git HTTP traffic, and streams artifact uploads directly to Object Storage.</li>
+<li><strong>Sidekiq</strong>: Executes asynchronous background tasks (mailers, webhooks, pipeline fan-out).</li>
+<li><strong>Redis</strong>: Manages transient session state, rate-limiting counters (<code>rack-attack</code>), and Sidekiq job queues.</li>
+<li><strong>PostgreSQL</strong>: Stores central relational data tables in the <code>gitlabhq_production</code> schema.</li>
+<li><strong>Gitaly</strong>: Translates incoming gRPC calls into bare Git disk operations; enforces 57s execution deadlines.</li>
+<li><strong>Runner</strong>: Executes job shell scripts inside isolated container environments.</li>
+</ul>
+<h5>SV-6: Systems Resource Flow Matrix</h5>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Source System</th>
+<th style="text-align: left;">Destination System</th>
+<th style="text-align: left;">Resource / Flow</th>
+<th style="text-align: left;">Transport Protocol</th>
+<th style="text-align: left;">Authentication Mechanism</th>
+<th style="text-align: left;">Data Exchanged</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>User Browser / IDE</strong></td>
+<td style="text-align: left;"><strong>HTTP Front Door (NGINX)</strong></td>
+<td style="text-align: left;">Web &amp; API Requests</td>
+<td style="text-align: left;">HTTPS (TLS)</td>
+<td style="text-align: left;">SAML / OIDC / Personal Access Token</td>
+<td style="text-align: left;">UI navigation, REST/GraphQL requests, code commits <code>[S8, S12]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git Client</strong></td>
+<td style="text-align: left;"><strong>SSH Front Door (GitLab Shell)</strong></td>
+<td style="text-align: left;">Git Operations</td>
+<td style="text-align: left;">SSH</td>
+<td style="text-align: left;">Public/Private SSH Key (FIPS compliant)</td>
+<td style="text-align: left;">Git packfiles, object updates <code>[S9, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>NGINX Proxy</strong></td>
+<td style="text-align: left;"><strong>Workhorse / Puma</strong></td>
+<td style="text-align: left;">App Requests</td>
+<td style="text-align: left;">HTTP / Unix Socket</td>
+<td style="text-align: left;">Internal Loopback</td>
+<td style="text-align: left;">Terminated HTTP request streams <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Puma Application</strong></td>
+<td style="text-align: left;"><strong>PostgreSQL</strong></td>
+<td style="text-align: left;">Database Queries</td>
+<td style="text-align: left;">PostgreSQL Wire</td>
+<td style="text-align: left;">Database Credentials</td>
+<td style="text-align: left;">Entity rows (users, projects, findings) <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Puma Application</strong></td>
+<td style="text-align: left;"><strong>Redis</strong></td>
+<td style="text-align: left;">Caching &amp; Queues</td>
+<td style="text-align: left;">Redis Protocol</td>
+<td style="text-align: left;">Redis Password</td>
+<td style="text-align: left;">Session keys, Sidekiq job payloads <code>[S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Puma / Sidekiq</strong></td>
+<td style="text-align: left;"><strong>Gitaly Service</strong></td>
+<td style="text-align: left;">Git Data Requests</td>
+<td style="text-align: left;">gRPC over TCP/TLS</td>
+<td style="text-align: left;">Shared Secret Token</td>
+<td style="text-align: left;">Git commit objects, diffs, branch refs <code>[S5, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab Runner</strong></td>
+<td style="text-align: left;"><strong>Puma Application</strong></td>
+<td style="text-align: left;">Job Polling &amp; Status</td>
+<td style="text-align: left;">HTTPS</td>
+<td style="text-align: left;">Runner Token / Job Token</td>
+<td style="text-align: left;">Job instructions, execution logs, finding payloads <code>[S3, S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab Runner</strong></td>
+<td style="text-align: left;"><strong>Gitaly Service</strong></td>
+<td style="text-align: left;">Repository Clone</td>
+<td style="text-align: left;">HTTPS / gRPC</td>
+<td style="text-align: left;">Transient Job Token</td>
+<td style="text-align: left;">Bare repository source code <code>[S3, S5]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab Runner</strong></td>
+<td style="text-align: left;"><strong>Object Storage (via Workhorse)</strong></td>
+<td style="text-align: left;">Binary Upload</td>
+<td style="text-align: left;">HTTPS</td>
+<td style="text-align: left;">Transient Job Token</td>
+<td style="text-align: left;">Heavy build artifacts (bypassing Rails) <code>[S1, S17]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Application / IDE</strong></td>
+<td style="text-align: left;"><strong>AI Gateway</strong></td>
+<td style="text-align: left;">Prompts &amp; Code Context</td>
+<td style="text-align: left;">HTTPS</td>
+<td style="text-align: left;">App Gateway Token</td>
+<td style="text-align: left;">Code snippets, file context, prompt parameters <code>[S12, S13]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Customer IdP</strong></td>
+<td style="text-align: left;"><strong>Puma Application</strong></td>
+<td style="text-align: left;">Identity Assertions</td>
+<td style="text-align: left;">HTTPS (SAML/OIDC)</td>
+<td style="text-align: left;">IdP Certificate / OAuth Secret</td>
+<td style="text-align: left;">User attributes, group memberships, PIV/CAC assertions <code>[S8]</code></td>
+</tr>
+</tbody>
+</table>
+<h4>4.3 Data and Information Viewpoints (DIV-1, DIV-2, DIV-3)</h4>
+<h5>DIV-1: Conceptual Data Model</h5>
+<ul>
+<li><strong>Change Record</strong>: High-level governance object unifying proposed code modifications with review history and test results.</li>
+<li><strong>Pipeline Contract</strong>: Standardized specification declaring automated workflow execution constraints.</li>
+<li><strong>Job Execution</strong>: Discrete computational task executed within an isolated runtime environment.</li>
+<li><strong>Security Finding</strong>: Normalized security weakness entity discovered during automated testing.</li>
+<li><strong>Offering Boundary</strong>: Compliance and operational scope defining data hosting boundaries.</li>
+</ul>
+<h5>DIV-2: Logical Data Model</h5>
+<pre><code>+---------------------------------------------------------------------------------+
+|                            LOGICAL DATA MODEL (DIV-2)                           |
+|                                                                                 |
+|   +-----------------------+                    +----------------------------+   |
+|   |        PROJECT        |1                  *|       MERGE REQUEST        |   |
+|   |  - project_id (PK)    |-------------------|  - mr_id (PK)               |   |
+|   |  - path               |                    |  - source_branch           |   |
+|   |  - visibility_level   |                    |  - target_sha              |   |
+|   +-----------------------+                    +----------------------------+   |
+|               | 1                                            | 1                |
+|               |                                              |                  |
+|               | 1                                            | *                |
+|   +-----------------------+                    +----------------------------+   |
+|   |      REPOSITORY       |                    |          PIPELINE          |   |
+|   |  - repo_id (PK)       |                    |  - pipeline_id (PK)        |   |
+|   |  - storage_shard      |                    |  - commit_sha              |   |
+|   +-----------------------+                    |  - status                  |   |
+|               | 1                              +----------------------------+   |
+|               |                                              | 1                |
+|               | *                                            |                  |
+|   +-----------------------+                                  | *                |
+|   |      GITALY RPC       |                    +----------------------------+   |
+|   |  - endpoint_uri       |                    |            JOB             |   |
+|   +-----------------------+                    |  - job_id (PK)             |   |
+|                                                |  - runner_tag              |   |
+|                                                +----------------------------+   |
+|                                                   | 1                  | 1      |
+|                                                   |                    |        |
+|                                                   | *                  | *      |
+|                                        +------------------+   +-------------+   |
+|                                        |     FINDING      |   |  REGISTRY   |   |
+|                                        |  - finding_id    |   |  - blob_uri |   |
+|                                        |  - severity      |   +-------------+   |
+|                                        +------------------+                     |
++---------------------------------------------------------------------------------+
+</code></pre>
+<h5>DIV-3: Physical Data Model</h5>
+<ul>
+<li><strong>PostgreSQL Schema (<code>gitlabhq_production</code>)</strong>: Central database schema containing core relational tables (<code>projects</code>, <code>merge_requests</code>, <code>ci_pipelines</code>, <code>ci_builds</code>, <code>vulnerability_occurrences</code>, <code>users</code>).</li>
+<li><strong>Redis Key-Space</strong>: In-memory key structures holding Sidekiq queues (<code>queue:default</code>), user session hashes, and settings caches.</li>
+<li><strong>Gitaly Storage Disk</strong>: Block storage filesystems containing bare Git repositories organized by hashed storage paths.</li>
+<li><strong>Object Storage / AWS S3</strong>: Object buckets storing CI build artifacts, container registry layers, LFS tracking files, and export packages.</li>
+</ul>
+<h4>4.4 Standards Viewpoint (StdV-1)</h4>
+<ul>
+<li><strong>Authentication Standards</strong>: SAML 2.0, OpenID Connect (OIDC), Hardware Token Integration (PIV/CAC via customer IdP) <code>[S8]</code>.</li>
+<li><strong>Cryptographic Standards</strong>: FIPS 140-2/140-3 validated cryptographic modules for SSH key generation, TLS transport, and database encryption at rest <code>[S8, S9]</code>.</li>
+<li><strong>Email &amp; Domain Protection</strong>: Domain-based Message Authentication, Reporting and Conformance (DMARC) enforced for outgoing application messaging per DHS BOD 18-01 <code>[S9]</code>.</li>
+<li><strong>Supply Chain &amp; Pipeline Security Guidelines</strong>: Alignment with NIST SP 800-204D for software supply chain integration and NIST SP 800-53 controls for configuration management <code>[S9, S18]</code>.</li>
+<li><strong>Government Compliance Certification</strong>: FedRAMP Moderate Authority to Operate (ATO) under listing FR2411959145 <code>[S8, S10]</code>.</li>
+<li><strong>Standards Silence Note</strong>: <em>Any standard or compliance accreditation not explicitly cited above (such as FedRAMP High, DoD IL4/IL5/IL6 packages, or specific FIPS certificate numbers) is unsupported in the sources and designated as </em><em><code>SILENT / UNSUPPORTED IN SOURCES</code></em><em>.</em></li>
+</ul>
+<hr />
+<h3>5. Offering &amp; Security Boundary Analysis (Physical Realizations)</h3>
+<h4>Deployment Offering Comparison Matrix</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Feature / Architecture Dimension</th>
+<th style="text-align: left;">GitLab.com</th>
+<th style="text-align: left;">Self-Managed</th>
+<th style="text-align: left;">Dedicated</th>
+<th style="text-align: left;">Dedicated for Government</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Infrastructure Operator</strong></td>
+<td style="text-align: left;">GitLab Inc. <code>[S1]</code></td>
+<td style="text-align: left;">Customer Organization <code>[S1]</code></td>
+<td style="text-align: left;">GitLab Inc. (via Switchboard + Amp) <code>[S6]</code></td>
+<td style="text-align: left;">GitLab Inc. (via Switchboard + Amp) <code>[S7, S8]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Data Residency &amp; Hosting</strong></td>
+<td style="text-align: left;">GitLab Multi-Tenant Commercial AWS <code>[S1]</code></td>
+<td style="text-align: left;">Customer-defined (On-Premises or Cloud VPC) <code>[S1]</code></td>
+<td style="text-align: left;">Dedicated Single-Tenant Commercial AWS Account <code>[S6]</code></td>
+<td style="text-align: left;">Dedicated Single-Tenant AWS GovCloud US-West Account <code>[S7, S8]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git Storage Topology</strong></td>
+<td style="text-align: left;">Multi-tenant Gitaly <code>[S1]</code></td>
+<td style="text-align: left;">Gitaly or Gitaly Cluster (Praefect HA) <code>[S5]</code></td>
+<td style="text-align: left;"><strong>Sharded Gitaly (Praefect NOT used)</strong> <code>[S6]</code></td>
+<td style="text-align: left;"><strong>Sharded Gitaly (Praefect NOT used)</strong> <code>[S7]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runner Execution Boundary</strong></td>
+<td style="text-align: left;">Shared Multi-Tenant + Customer Self-Managed <code>[S1]</code></td>
+<td style="text-align: left;">Customer Self-Managed <code>[S1]</code></td>
+<td style="text-align: left;">GitLab-Hosted Optional + Customer Self-Managed <code>[S6]</code></td>
+<td style="text-align: left;"><strong>Customer Self-Managed FIPS Runners OUTSIDE tenant boundary</strong> <code>[S8, S9]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AI Processing Path</strong></td>
+<td style="text-align: left;">GitLab-Managed AI Gateway to Vendor LLMs <code>[S12]</code></td>
+<td style="text-align: left;">GitLab-Managed AI Gateway OR Self-Hosted Gateway <code>[S12, S13]</code></td>
+<td style="text-align: left;">GitLab-Managed AI Gateway (Duo on Dedicated) <code>[S6, S12]</code></td>
+<td style="text-align: left;"><strong>Self-Hosted AI Gateway Path ONLY; Duo Agent Platform flows NOT authorized</strong> <code>[S8, S13]</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Governance / Compliance ATO</strong></td>
+<td style="text-align: left;">Commercial SOC2 / ISO <code>[S1]</code></td>
+<td style="text-align: left;">Governed by Customer's Organizational ATO <code>[S1]</code></td>
+<td style="text-align: left;">Commercial SOC2 / ISO <code>[S6]</code></td>
+<td style="text-align: left;"><strong>FedRAMP Moderate ATO (FR2411959145, GSA Sponsor)</strong> <code>[S8, S10]</code></td>
+</tr>
+</tbody>
+</table>
+<h4>Critical Security Boundary Restrictions &amp; Defense Implications</h4>
+<pre><code>+---------------------------------------------------------------------------------+
+|                DEDICATED FOR GOVERNMENT BOUNDARY RESTRICTIONS                   |
+|                                                                                 |
+|  +---------------------------------------------------------------------------+  |
+|  |             AWS GOVCLOUD US-WEST (GITLAB-OPERATED TENANT)                 |  |
+|  |                                                                           |  |
+|  |   +-------------------------------------------------------------------+   |  |
+|  |   |                CUSTOMER DEDICATED AWS ACCOUNT                     |   |  |
+|  |   |                                                                   |   |  |
+|  |   |  • GitLab Control Plane (Puma, Sidekiq, Postgres, Redis)          |   |  |
+|  |   |  • Sharded Gitaly Storage                                         |   |  |
+|  |   |  • Container &amp; Package Registries                                 |   |  |
+|  |   |                                                                   |   |  |
+|  |   +-------------------------------------------------------------------+   |  |
+|  |                                                                           |  |
+|  |   [RESTRICTION 1]: Hosted Runners NOT permitted in tenant boundary      |  |
+|  |   [RESTRICTION 2]: Duo Agent Platform external flows NOT authorized       |  |
+|  +---------------------------------------------------------------------------+  |
+|                                       ^                                         |
+|                                       | (Job Token over HTTPS / PrivateLink)    |
+|                                       v                                         |
+|  +---------------------------------------------------------------------------+  |
+|  |                            AGENCY ESTATE                                  |  |
+|  |                                                                           |  |
+|  |   • Customer-Managed FIPS Runners (Outside Tenant)                        |  |
+|  |   • Agency Identity Provider (SAML/OIDC with PIV/CAC)                     |  |
+|  |   • Customer-Hosted Local AI Gateway Models                               |  |
+|  +---------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------+
+</code></pre>
+<ol>
+<li><strong>Job Plane Boundary Isolation</strong>: Hosted runners inside the GitLab-managed tenant account are explicitly unavailable on Dedicated for Government. Government agencies <strong>must</strong> deploy and operate their own self-managed execution runners using published FIPS-validated runner container images on infrastructure residing <strong>outside</strong> the GitLab FedRAMP tenant boundary <code>[S8, S9]</code>.</li>
+<li><strong>AI Platform Authorization Caps</strong>: While standard self-hosted model gateways are supported, <strong>GitLab Duo Agent Platform foundational agent flows and external agent interactions are NOT authorized</strong> on Dedicated for Government under its FedRAMP Moderate baseline <code>[S8]</code>.</li>
+<li><strong>Identity Handoff</strong>: Dedicated for Government does not provide a native PIV/CAC card reading stack inside the tenant. Smartcard authentication must be performed at the agency's external Identity Provider, which passes SAML or OIDC assertions to the platform <code>[S8]</code>.</li>
+<li><strong>Defense Impact Level Disambiguation (IL5 / IL6 / Air-Gap Constraints)</strong>: The Dedicated for Government platform offering holds a FedRAMP Moderate ATO. It <strong>cannot</strong> be deployed for <strong>DoD Impact Level 5 (Controlled Unclassified Information / National Security Systems)</strong>, <strong>Impact Level 6 (SECRET)</strong>, or disconnected air-gapped environments. Defense organizations requiring IL5, IL6, or air-gap execution <strong>cannot</strong> use Dedicated for Government and <strong>must deploy the Self-Managed platform offering</strong> on customer-provisioned and customer-authorized infrastructure <code>[S1, S14]</code>.</li>
+</ol>
+<hr />
+<h3>6. Formal Architecture Gaps and Source Silence Register</h3>
+<p>To maintain complete architectural integrity, the register below logs all framework dimensions, requested technical features, or operational deployment attributes where the source context provides incomplete or zero data. In compliance with strict grounding rules, these items are formally classified without extrapolation.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Framework View / Dimension</th>
+<th style="text-align: left;">Requested Architectural Item</th>
+<th style="text-align: left;">Source Status</th>
+<th style="text-align: left;">Explicit Architecture Gap / Unknown</th>
+<th style="text-align: left;">Impact on Framework Alignment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>DoDAF SV-6 / System Interfaces</strong></td>
+<td style="text-align: left;">Kubernetes Agent (KAS) Program Authorization Status</td>
+<td style="text-align: left;"><strong>SILENT</strong></td>
+<td style="text-align: left;">Sources provide zero data on whether the KAS daemon is authorized within the FedRAMP Moderate boundary for Dedicated for Government <code>[S1, S8]</code></td>
+<td style="text-align: left;">SV-6 system resource flow matrix cannot confirm authorized cluster-to-tenant communication paths for government tenants.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TOGAF Phase A / Compliance</strong></td>
+<td style="text-align: left;">High-Impact &amp; Classified Accreditation Scope</td>
+<td style="text-align: left;"><strong>SILENT</strong></td>
+<td style="text-align: left;">Sources explicitly state Dedicated for Government is FedRAMP Moderate, but provide no data on DoD IL5, IL6, or SECRET SaaS offerings <code>[S1]</code></td>
+<td style="text-align: left;">Phase A Vision cannot extend Dedicated for Government to classified military defense workloads; Self-Managed is required.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DoDAF StdV-1 / Integration</strong></td>
+<td style="text-align: left;">Third-Party Notification Integrations (Slack / MS Teams)</td>
+<td style="text-align: left;"><strong>SILENT</strong></td>
+<td style="text-align: left;">Sources acknowledge webhook notification support generally, but remain silent on whether webhooks to third-party SaaS platforms are authorized inside the FedRAMP ATO <code>[S8]</code></td>
+<td style="text-align: left;">Standards Profile cannot confirm compliance boundaries for outgoing event webhooks.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>System Viewpoints (SV)</strong></td>
+<td style="text-align: left;">Dedicated for Government Hosted FIPS Runner Availability</td>
+<td style="text-align: left;"><strong>PARTIALLY COVERED</strong></td>
+<td style="text-align: left;">Handbook docs list hosted FIPS runners as a potential roadmap item, but current security guides mandate customer self-managed runners outside the tenant <code>[S8, S9]</code></td>
+<td style="text-align: left;">SV-1/SV-2 system interface diagrams must keep the runner execution plane strictly outside the SaaS tenant boundary.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Performance Benchmarking</strong></td>
+<td style="text-align: left;">Platform Scanner Benchmark Metrics</td>
+<td style="text-align: left;"><strong>SILENT</strong></td>
+<td style="text-align: left;">Sources contain no comparative benchmark data, scan throughput numbers, or empirical detection rate comparisons against competing DevSecOps platforms <code>[S7]</code></td>
+<td style="text-align: left;">Quantitative performance attributes cannot be added to DoDAF SV-4 functional descriptions.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DoDAF DIV-3 / Physical Storage</strong></td>
+<td style="text-align: left;">Database Schema Tables for AI Prompts</td>
+<td style="text-align: left;"><strong>SILENT</strong></td>
+<td style="text-align: left;">Sources detail high-level AI prompt paths but do not reveal physical PostgreSQL database table schemas or Redis key patterns for AI context storage <code>[S12, S13]</code></td>
+<td style="text-align: left;">Physical Data Model (DIV-3) for AI Gateway features remains limited to logical interface descriptions.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>7. Document Conclusion &amp; Architectural Compliance Summary</h3>
+<p>This report establishes a complete architectural crosswalk mapping the <strong>GitLab DevSecOps Platform Architecture</strong> directly into TOGAF ADM phases and DoDAF viewpoints.</p>
+<ul>
+<li><strong>TOGAF ADM Alignment</strong>: The platform fulfills the lifecycle from <strong>Phase A (Architecture Vision)</strong> by delivering a single system of record for governed software change; <strong>Phase B (Business Architecture)</strong> by formalizing role-based actor boundaries and C1–C9 operational capabilities; <strong>Phase C (Data &amp; Application Architecture)</strong> by establishing vendor-neutral logical entities and RPC storage abstractions; and <strong>Phase D (Technology Architecture)</strong> by realizing these abstractions via concrete binaries (Puma, Workhorse, Sidekiq, Gitaly, PostgreSQL, Redis, Runner, KAS) and middle-layer execution rules (Rack middleware, Workhorse direct-upload bypass, Gitaly 57s execution deadlines).</li>
+<li><strong>DoDAF Viewpoint Deconstruction</strong>: Platform interactions are fully operationalized across <strong>OV-1, OV-2, OV-5b</strong> (operational change flows), <strong>SV-1, SV-2, SV-4, SV-6</strong> (system boundaries, service functions, and resource flow matrices), <strong>DIV-1, DIV-2, DIV-3</strong> (conceptual, logical, and physical database models), and <strong>StdV-1</strong> (FIPS, SAML/OIDC, and FedRAMP standards profiles).</li>
+<li><strong>Critical Operational Failure Modes &amp; Security Boundaries</strong>:<br />
+  1. <em>Gitaly Process Persistence</em>: When Puma times out after 60 seconds (with Gitaly's deadline set at 57 seconds), Gitaly returns a deadline error to Puma but <strong>does not kill the underlying child <code>git</code> process on disk</strong>, allowing it to run to completion and potentially cause lingering I/O load <code>[S17]</code>.<br />
+  2. <em>Runner Token Exposure</em>: If a runner token is compromised, the attacker gains job execution privileges within that runner's scope, emphasizing the necessity of runner token rotation and execution boundary isolation <code>[S3, S9]</code>.<br />
+  3. <em>Accreditation Boundary Limits</em>: Organizations deploying under FedRAMP Moderate on <strong>Dedicated for Government</strong> must enforce customer-managed FIPS runners outside the tenant, route smartcard identity through an external agency IdP, and restrict AI execution to self-hosted model gateways (as Duo Agent Platform flows are unauthorized). For <strong>DoD Impact Level 5 (IL5)</strong>, <strong>Impact Level 6 (IL6)</strong>, or air-gapped environments, Dedicated for Government cannot be used, and defense organizations <strong>must deploy the Self-Managed platform offering</strong> <code>[S1, S8, S14]</code>.</li>
+</ul>
+</article>
+</body>
+</html>

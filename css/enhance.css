@@ -232,6 +232,39 @@
 .block-card:hover {
   border-color: #484f58;
 }
+details.block-details {
+  padding: 0;
+  overflow: clip;
+}
+details.block-details > .block-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+details.block-details > .block-summary::-webkit-details-marker { display: none; }
+details.block-details .block-body { padding: 0 1.25rem 1.25rem; }
+.block-chevron {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+details.block-details[open] .block-chevron { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .block-chevron { transition: none; }
+}
+.lib-iframe {
+  width: 100%;
+  flex: 1;
+  min-height: 620px;
+  border: 0;
+  background: var(--bg-card);
+}
 .block-top {
   display: flex;
   align-items: center;
@@ -553,11 +586,39 @@
 }
 .debate-footer {
   padding: 1.25rem 1.5rem;
-  background: rgba(33, 38, 45, 0.5);
+  background: var(--bg-surface);
   border-top: 1px solid var(--border-muted);
   font-size: 0.84rem;
   color: var(--text-secondary);
   line-height: 1.5;
+}
+.debate-panels { display: flex; flex-direction: column; gap: 0.5rem; }
+.debate-panel {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  overflow: clip;
+}
+.debate-panel > summary {
+  cursor: pointer;
+  padding: 0.65rem 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  list-style: none;
+}
+.debate-panel > summary::-webkit-details-marker { display: none; }
+.debate-panel > summary::after {
+  content: "▾";
+  float: inline-end;
+  color: var(--text-muted);
+}
+.debate-panel[open] > summary::after { content: "▴"; }
+.debate-panel-body {
+  padding: 0.65rem 0.85rem 0.85rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  border-top: 1px dashed var(--border-muted);
 }
 
 /* Practice & Quizzes */

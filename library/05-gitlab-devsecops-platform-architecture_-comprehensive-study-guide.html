@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitLab DevSecOps Platform Architecture: Comprehensive Study Guide</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>GitLab DevSecOps Platform Architecture: Comprehensive Study Guide</h1>
+<p>This study guide provides a detailed synthesis of the core concepts, runtime components, deployment models, security frameworks, and integration boundaries of the GitLab DevSecOps Platform Architecture. It is structured into four main sections: Architectural Overview &amp; Key Concepts, Short-Answer Practice Questions with an Answer Key, Essay Prompts for Deeper Exploration, and a Comprehensive Glossary.</p>
+<hr />
+<h2>Section 1: Architectural Overview &amp; Key Concepts</h2>
+<h3>1. Conceptual Architecture: Capabilities &amp; Actors</h3>
+<p>The conceptual architecture defines <em>what</em> the platform delivers and <em>why</em>, staying independent of specific product names, hosting regions, or cloud vendor SKUs. </p>
+<ul>
+<li><strong>Core Problem Solved:</strong> Disparate software tools (source control, CI/CD, security scanners, artifact registries) create fragmented change records, making auditing difficult and creating ambiguous boundaries between untrusted job execution and the governance control plane.</li>
+<li><strong>System Purpose:</strong> Provide a single governed change path from intent to running software, serving as a unified system of record for source code, pipeline evidence, vulnerabilities, and deployment tracking.</li>
+<li><strong>Key Conceptual Actors:</strong><ul>
+<li><em>Developer:</em> Produces software changes and initiates pull/merge requests.</li>
+<li><em>Reviewer:</em> Approves changes based on automated tests and security findings attached to the change record.</li>
+<li><em>Security Operator:</em> Sets organizational scan policies and manages vulnerability waivers centrally.</li>
+<li><em>Platform Operator:</em> Maintains control plane availability, database integrity, and identity integrations.</li>
+<li><em>Job Operator:</em> Provisions and maintains isolated worker nodes that execute pipeline builds.</li>
+<li><em>Identity Provider (IdP):</em> Authenticates actors via corporate Single Sign-On (SSO) and hardware tokens (PIV/CAC).</li>
+<li><em>Authorizing Official (AO):</em> Issues an Authority to Operate (ATO) accepting residual risk for a specific impact level.</li>
+<li><em>Auditor:</em> Evaluates compliance evidence without requiring manual system tours.</li>
+</ul>
+</li>
+</ul>
+<h4>Core Capabilities Matrix</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">ID</th>
+<th style="text-align: left;">Capability</th>
+<th style="text-align: left;">Description / Delivered Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>C1</strong></td>
+<td style="text-align: left;">Change Record</td>
+<td style="text-align: left;">Single object containing source diffs, reviewer discussions, and pipeline gate results.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C2</strong></td>
+<td style="text-align: left;">Pipeline Contract</td>
+<td style="text-align: left;">Declared execution plan defining sequential or parallel jobs triggered by code events.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C3</strong></td>
+<td style="text-align: left;">Job Execution</td>
+<td style="text-align: left;">Execution of untrusted code on isolated workers, segregated from control plane memory.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C4</strong></td>
+<td style="text-align: left;">Finding Record</td>
+<td style="text-align: left;">Automated security scan findings parsed and attached directly to the change record.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C5</strong></td>
+<td style="text-align: left;">Artifact Store</td>
+<td style="text-align: left;">Integrated repository storing compiled binary images and dependency packages next to source code.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C6</strong></td>
+<td style="text-align: left;">Git Storage Access</td>
+<td style="text-align: left;">Repository history served exclusively through a structured Git RPC layer rather than direct app disk access.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C7</strong></td>
+<td style="text-align: left;">Deployment Offerings</td>
+<td style="text-align: left;">Modular offering models supporting varying operational boundaries and FedRAMP/DoD impact levels.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C8</strong></td>
+<td style="text-align: left;">Identity Handoff</td>
+<td style="text-align: left;">Federated user login handoff delegating authentication to external enterprise IdPs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C9</strong></td>
+<td style="text-align: left;">AI Assistance</td>
+<td style="text-align: left;">Grounded LLM assistance for code generation, chat, and vulnerability explanation via controlled pathways.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>2. Logical Architecture &amp; Runtime Components</h3>
+<p>The logical architecture maps platform capabilities to vendor-neutral components, data entities, and execution planes.</p>
+<pre><code>       [ HTTP / SSH Front Door ] (NGINX / GitLab Shell)
+                  |
+                  v
+         [ Application Layer ] (Puma / Rails) &lt;---&gt; [ System Database ] (PostgreSQL)
+           /              \                         [ Session / Cache  ] (Redis)
+          /                \
+         v                  v
+[ Background Queue ]    [ Git RPC Layer ]
+     (Sidekiq)              (Gitaly)
+         |                      |
+         v                      v
+[ Job Workers ] &lt;-------&gt; [ Repositories &amp; Artifacts ]
+   (Runners)                 (Disk / Object Store)
+</code></pre>
+<h4>Runtime Component Breakdown</h4>
+<ol>
+<li><strong>Front Doors (NGINX &amp; GitLab Shell):</strong> Handles incoming web, API, Git-over-HTTP, and Git-over-SSH traffic. TLS terminates at NGINX, while GitLab Shell handles SSH key authorization.</li>
+<li><strong>GitLab Workhorse:</strong> A reverse proxy sitting between NGINX and Puma. It intercepts long-running requests, large file downloads, Git HTTP operations, and direct artifact uploads to object storage, bypassing Rails to prevent application server thread saturation.</li>
+<li><strong>Application Web Server (Puma / Rails):</strong> Serves web requests, processes API calls, renders interfaces, and executes core business logic. Puma acts as the Rack web server hosting the Ruby on Rails application.</li>
+<li><strong>Background Queue (Sidekiq):</strong> Executes asynchronous background jobs (e.g., email notifications, import operations, pipeline fan-outs, security job creation). Utilizes Redis for job queuing.</li>
+<li><strong>Session &amp; Cache Store (Redis):</strong> Fast, in-memory key-value store used for session state, application setting caching (memoization), rate-limiting metadata, and Sidekiq background job queues.</li>
+<li><strong>System of Record Database (PostgreSQL):</strong> Relational database storing persistent metadata including user accounts, project configurations, issue tracking, merge request states, and security findings (<code>hq_production</code>).</li>
+<li><strong>Git RPC Service (Gitaly):</strong> Dedicated service encapsulating all Git repository access on disk. Serves high-performance gRPC calls from Rails/Sidekiq, preventing application nodes from mounting shared network file systems directly.</li>
+<li><strong>Job Workers (GitLab Runner):</strong> Independent agents running on physical or virtual infrastructure. They poll the job queue API, pull repository code, execute build scripts inside containers, and upload build logs/artifacts back to the control plane.</li>
+<li><strong>Cluster Agent (KAS):</strong> GitLab Agent for Kubernetes; maintains an outbound connection from inside client Kubernetes clusters to the control plane for GitOps pull deployments and cluster management.</li>
+</ol>
+<hr />
+<h3>3. Physical Offerings &amp; Deployment Architectures</h3>
+<p>GitLab is packaged and deployed across four distinct offerings tailored to different data impact levels, infrastructure owners, and compliance frameworks.</p>
+<h4>Platform Offerings Comparison</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Feature / Parameter</th>
+<th style="text-align: left;">GitLab.com</th>
+<th style="text-align: left;">Self-Managed</th>
+<th style="text-align: left;">GitLab Dedicated</th>
+<th style="text-align: left;">Dedicated for Government</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Infra Operator</strong></td>
+<td style="text-align: left;">GitLab Inc.</td>
+<td style="text-align: left;">Customer</td>
+<td style="text-align: left;">GitLab (Switchboard/Amp)</td>
+<td style="text-align: left;">GitLab (Switchboard/Amp)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Tenant Isolation</strong></td>
+<td style="text-align: left;">Multi-tenant SaaS</td>
+<td style="text-align: left;">Customer-defined</td>
+<td style="text-align: left;">Single-tenant AWS Account</td>
+<td style="text-align: left;">Single-tenant AWS GovCloud</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cloud Region</strong></td>
+<td style="text-align: left;">AWS Commercial</td>
+<td style="text-align: left;">Any (On-Prem / Cloud)</td>
+<td style="text-align: left;">Commercial AWS</td>
+<td style="text-align: left;">AWS GovCloud US-West</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Compliance Level</strong></td>
+<td style="text-align: left;">Commercial</td>
+<td style="text-align: left;">Customer ATO (IL5/Air-Gap)</td>
+<td style="text-align: left;">SOC2 / ISO</td>
+<td style="text-align: left;">FedRAMP Moderate (FR2411959145)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Git Storage Topology</strong></td>
+<td style="text-align: left;">GitLab Gitaly</td>
+<td style="text-align: left;">Gitaly / Praefect Cluster</td>
+<td style="text-align: left;">Sharded Gitaly (No Praefect)</td>
+<td style="text-align: left;">Sharded Gitaly (No Praefect)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Runner Infrastructure</strong></td>
+<td style="text-align: left;">Shared / Self-hosted</td>
+<td style="text-align: left;">Customer-managed</td>
+<td style="text-align: left;">Hosted or Customer</td>
+<td style="text-align: left;"><strong>Customer Self-Managed FIPS Only</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Identity / Auth</strong></td>
+<td style="text-align: left;">Native / SAML / OIDC</td>
+<td style="text-align: left;">Native / SAML / OIDC</td>
+<td style="text-align: left;">Enterprise SAML / OIDC</td>
+<td style="text-align: left;">Agency IdP (PIV / CAC Required)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AI Gateway Default</strong></td>
+<td style="text-align: left;">GitLab Cloud Gateway</td>
+<td style="text-align: left;">Cloud or Self-Hosted</td>
+<td style="text-align: left;">Dedicated Duo Gateway</td>
+<td style="text-align: left;"><strong>Self-Hosted AI Gateway Only</strong></td>
+</tr>
+</tbody>
+</table>
+<h4>Dedicated for Government Topology</h4>
+<ul>
+<li><strong>Infrastructure:</strong> Deployed exclusively within AWS GovCloud US-West in isolated single-tenant AWS accounts. Managed by U.S. citizens via GitLab Switchboard and Amp orchestration frameworks.</li>
+<li><strong>FedRAMP Authorization:</strong> Holds a FedRAMP Moderate Authority to Operate (ATO) sponsored by the General Services Administration (GSA), listed under FedRAMP ID <code>FR2411959145</code>.</li>
+<li><strong>Runner Isolation:</strong> GitLab-hosted runners are <strong>not</strong> permitted inside the government tenant boundary. Federal agencies must deploy their own self-managed, FIPS-compliant runners on agency-controlled infrastructure outside the tenant.</li>
+<li><strong>Private Connectivity:</strong> Supports AWS PrivateLink for inbound user access, outbound API connections, and Geo data migration without exposure to the public internet.</li>
+</ul>
+<hr />
+<h3>4. Integration Surface &amp; AI Data Paths</h3>
+<ul>
+<li><strong>Identity &amp; Access Management:</strong> Integrates with enterprise IdPs via SAML and OIDC. PIV/CAC smartcard authentication is enforced at the agency IdP level. Built-in authorization roles include Minimal Access, Guest, Planner, Reporter, Developer, Maintainer, Owner, Auditor (read-only compliance access), External Users, and automated Service Accounts.</li>
+<li><strong>Vulnerability Management Workflow:</strong> Integrates automated scanning into an iterative lifecycle:<br />
+    $$\text{Detect} \longrightarrow \text{Triage} \longrightarrow \text{Analyze} \longrightarrow \text{Remediate} \longrightarrow \text{Optimize}$$<br />
+    Tools embedded into CI/CD jobs include Semgrep (SAST), OWASP ZAP (DAST), Dependency-Check (SBOM/Dependencies), Container Scanning, and Secret Detection.</li>
+</ul>
+<pre><code>[ Developer Client / IDE ]
+         |
+         v
+[ GitLab Rails Application ]
+         |
+         +---------------------------------------+
+         | (Commercial Path)                     | (GovCloud / Air-Gap Path)
+         v                                       v
+[ GitLab-Managed AI Gateway ]           [ Customer Self-Hosted AI Gateway ]
+         |                                       |
+         v                                       v
+[ Multi-Tenant Vendor LLMs ]            [ Private Models / Bedrock GovCloud ]
+(Claude, Gemini, Codestral)             (vLLM, Customer AWS Account)
+</code></pre>
+<ul>
+<li><strong>AI Feature Architecture (GitLab Duo):</strong><ul>
+<li><em>Path 1 (GitLab-Managed Gateway):</em> Prompts and file context pass through the GitLab-managed AI Gateway to vendor LLMs (Anthropic Claude, Google Gemini, Mistral/Codestral).</li>
+<li><em>Path 2 (Self-Hosted AI Gateway):</em> Available for Self-Managed and Dedicated for Government environments. Prompts flow to a self-hosted gateway connecting to customer-owned model endpoints (e.g., vLLM or AWS Bedrock in GovCloud).</li>
+<li><em>Government Restriction:</em> Duo Agent Platform foundational agents and external agent flows are <strong>not authorized</strong> on Dedicated for Government under the FedRAMP Moderate baseline.</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2>Section 2: Short-Answer Practice Questions</h2>
+<h3>Questions</h3>
+<ol>
+<li>What is the fundamental operational distinction between the Control Plane and the Job Plane in the GitLab architecture?</li>
+<li>How do Git storage configurations differ between GitLab Dedicated and Self-Managed High Availability (HA) deployments?</li>
+<li>What architectural purpose does GitLab Workhorse serve, and why is it placed in front of Puma?</li>
+<li>What memory management issue necessitates the use of the Puma Worker Killer, and what operational side effect can it produce?</li>
+<li>How is administrative access initially provisioned and subsequently managed in GitLab Dedicated for Government?</li>
+<li>Where must GitLab Runners be hosted for a Dedicated for Government instance, and what binary requirements apply?</li>
+<li>What triggers an internal API call from Gitaly back to Rails during a Git RPC operation?</li>
+<li>What is the deployment restriction regarding Gitaly nodes in Cloud Native Hybrid reference architectures?</li>
+<li>How does PgBouncer optimize database connection overhead in multi-node GitLab deployments?</li>
+<li>What AI deployment topology is required to operate GitLab Duo features in an air-gapped or FedRAMP Moderate environment?</li>
+</ol>
+<hr />
+<h3>Answer Key</h3>
+<p><strong>1. What is the fundamental operational distinction between the Control Plane and the Job Plane in the GitLab architecture?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> The Control Plane (Rails, PostgreSQL, Redis, Gitaly) governs application state, project metadata, access policies, and vulnerability records within a secure administrative trust domain. The Job Plane (GitLab Runners) operates in a separate trust domain to execute untrusted user code, scripts, and build binaries. This separation ensures that a compromised job execution runner cannot directly access or modify control plane databases or underlying system configurations.</p>
+</blockquote>
+<p><strong>2. How do Git storage configurations differ between GitLab Dedicated and Self-Managed High Availability (HA) deployments?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> GitLab Dedicated uses a sharded Gitaly setup managed directly by GitLab automation, where customer repositories are distributed across discrete virtual machines without a Praefect cluster layer. In contrast, Self-Managed HA architectures traditionally utilize a Gitaly Cluster managed by Praefect, which handles transaction routing, strong consistency replication, and automatic failover across repository nodes.</p>
+</blockquote>
+<p><strong>3. What architectural purpose does GitLab Workhorse serve, and why is it placed in front of Puma?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> GitLab Workhorse is a reverse proxy designed to offload long-running HTTP operations from the primary Puma/Rails application threads. It handles heavy operations such as Git HTTP pulls/pushes, large file/artifact downloads, and direct object storage uploads. By intercepting these requests, Workhorse prevents Puma application workers from being exhausted by slow or large payload transfers, preserving capacity for quick API and web UI requests.</p>
+</blockquote>
+<p><strong>4. What memory management issue necessitates the use of the Puma Worker Killer, and what operational side effect can it produce?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> Web applications running on Ruby tend to allocate memory faster during high-frequency request endpoints than Ruby's garbage collection can reclaim, leading to gradual RAM bloat over time. The Puma Worker Killer automatically terminates Puma worker processes that exceed predefined memory limits so they can be cleanly restarted. However, if a worker is killed ungracefully mid-request, connected end users may experience intermittent HTTP 500 or 502 errors.</p>
+</blockquote>
+<p><strong>5. How is administrative access initially provisioned and subsequently managed in GitLab Dedicated for Government?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> The initial top-level administrator account is provisioned by the GitLab Dedicated operations team during instance deployment. Once the customer integrates their corporate SAML/OIDC Identity Provider (enforcing PIV/CAC authentication), day-to-day administrative duties are delegated to IdP-provisioned accounts, and the initial top-level administrator account is converted into a secured break-glass account.</p>
+</blockquote>
+<p><strong>6. Where must GitLab Runners be hosted for a Dedicated for Government instance, and what binary requirements apply?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> GitLab Runners cannot be hosted within the GitLab-managed GovCloud tenant boundary; they must be self-managed by the agency customer on infrastructure outside the tenant boundary. Furthermore, these runners must be compiled and deployed using FIPS-compliant runner container images and FIPS-validated cryptographic modules to comply with FedRAMP mandates.</p>
+</blockquote>
+<p><strong>7. What triggers an internal API call from Gitaly back to Rails during a Git RPC operation?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> When Gitaly receives a gRPC call to execute a Git operation on a repository (such as reading code or pushing updates), it must verify that the actor initiating the request has permission to perform that action. Gitaly calls back to an internal Rails endpoint (<code>/api/v4/internal/allowed</code>) to authenticate user credentials and authorize project permissions before reading from or writing to disk.</p>
+</blockquote>
+<p><strong>8. What is the deployment restriction regarding Gitaly nodes in Cloud Native Hybrid reference architectures?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> In Cloud Native Hybrid reference architectures, stateless components (Puma, Sidekiq, Workhorse) are deployed inside Kubernetes using Helm charts, but stateful Gitaly storage nodes must remain hosted on dedicated, persistent Virtual Machines outside Kubernetes. GitLab documentation explicitly restricts running high-availability Gitaly storage nodes inside Kubernetes pods due to I/O performance and storage integrity requirements.</p>
+</blockquote>
+<p><strong>9. How does PgBouncer optimize database connection overhead in multi-node GitLab deployments?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> PostgreSQL forks an independent operating system process for each client connection, consuming significant CPU and memory when hundreds of Puma and Sidekiq threads open connections simultaneously. PgBouncer acts as a lightweight connection pooler sitting in front of PostgreSQL, multiplexing a large pool of application connections into a smaller, fixed set of backend database processes to prevent connection exhaustion and memory overhead.</p>
+</blockquote>
+<p><strong>10. What AI deployment topology is required to operate GitLab Duo features in an air-gapped or FedRAMP Moderate environment?</strong></p>
+<blockquote>
+<p><strong>Answer:</strong> Air-gapped and FedRAMP Moderate environments cannot route prompts to external, multi-tenant vendor LLMs via the commercial GitLab-managed AI Gateway. Instead, they must deploy a self-hosted AI Gateway inside their compliance boundary, routing prompts exclusively to private, customer-managed model runtimes (such as local vLLM instances or AWS Bedrock endpoints in GovCloud).</p>
+</blockquote>
+<hr />
+<h2>Section 3: Essay Prompts for Deeper Exploration</h2>
+<ol>
+<li>
+<p><strong>Deployment Architecture &amp; Compliance Trade-Offs:</strong> Compare and contrast the structural, operational, and regulatory differences between GitLab.com, Self-Managed, GitLab Dedicated, and GitLab Dedicated for Government. In your analysis, address infrastructure ownership, tenant isolation, FedRAMP/IL5 impact boundaries, runner execution boundaries, and disaster recovery mechanisms such as GitLab Geo.</p>
+</li>
+<li>
+<p><strong>End-to-End Request Lifecycles &amp; Front-Door Offloading:</strong> Trace the complete execution flow of both a Git push over SSH and a large container image upload over HTTP. Detail every component traversed from the client terminal down to raw storage, highlighting the specific roles of NGINX, GitLab Shell, Workhorse, Puma/Rack middleware, Sidekiq, Gitaly, and Object Storage. Explain how Workhorse prevents Puma thread exhaustion.</p>
+</li>
+<li>
+<p><strong>Control Plane vs. Job Plane Security Boundaries:</strong> Analyze the architectural decision to isolate the CI/CD Job Plane from the DevSecOps Control Plane. Evaluate the risk vectors associated with runner token theft, misconfigured pipeline permissions, and shared runner environments. Detail the hardening controls required in high-consequence public sector environments to maintain zero trust boundaries between workers and repositories.</p>
+</li>
+<li>
+<p><strong>Resource Management &amp; Failure Modes in Ruby/Rails Platforms:</strong> Examine the internal runtime mechanisms designed to handle heavy concurrency and memory bloat within GitLab’s core architecture. Discuss the interplay between Puma multi-threading, the Puma Worker Killer, Gitaly gRPC timeout thresholds (such as <code>deadline_exceeded</code>), Sidekiq background queues, and PostgreSQL connection pooling with PgBouncer. How do these systems fail under extreme load, and what are their diagnostic "tells"?</p>
+</li>
+<li>
+<p><strong>AI Integration Boundaries &amp; Data Sovereignty:</strong> Critically analyze the data flow, groundings, and privacy controls of GitLab Duo AI features. Contrast the commercial multi-tenant AI path with the self-hosted AI Gateway topology. Explain why specific features (such as foundational agents in the Duo Agent Platform) are restricted in FedRAMP Moderate environments like Dedicated for Government, and design an architecture that satisfies strict data sovereignty requirements.</p>
+</li>
+</ol>
+<hr />
+<h2>Section 4: Comprehensive Glossary</h2>
+<ul>
+<li><strong>Amp:</strong> An internal orchestration application used by GitLab operations teams alongside Switchboard to provision, configure, and manage infrastructure roles, policies, and environments inside single-tenant customer AWS accounts for GitLab Dedicated.</li>
+<li><strong>Break-Glass Account:</strong> A emergency top-level administrative account created during instance provisioning. Once enterprise IdP integration (SAML/OIDC) is established, this local administrative account is locked down and reserved exclusively for emergency access when external authentication fails.</li>
+<li><strong>Cluster Agent (KAS):</strong> GitLab Agent for Kubernetes. An in-cluster component that establishes a secure, outbound-only connection to the GitLab application, enabling GitOps pull deployments, real-time cluster monitoring, and Kubernetes management without exposing cluster API endpoints to the public internet.</li>
+<li><strong>Control Plane:</strong> The collection of core system components (Puma, PostgreSQL, Redis, Gitaly, Sidekiq) responsible for managing application logic, storing metadata, enforcing security policies, and maintaining system governance.</li>
+<li><strong>Dedicated for Government:</strong> A single-tenant SaaS offering of GitLab hosted on AWS GovCloud US-West. Managed by U.S. citizens and authorized at the FedRAMP Moderate impact level under FedRAMP ID <code>FR2411959145</code>.</li>
+<li><strong>FIPS Runner:</strong> A build of GitLab Runner compiled with FIPS-validated cryptographic modules and executing on FIPS-hardened operating systems. Mandatory for processing workloads in FedRAMP Moderate boundaries.</li>
+<li><strong>Gitaly:</strong> A high-performance RPC service written in Go that mediates all read and write access to Git repositories on disk, abstracting file system interactions away from the Rails application layer.</li>
+<li><strong>Gitaly Cluster (Praefect):</strong> A high-availability Git storage architecture utilized in Self-Managed deployments where a Praefect proxy router manages strong consistency replication, health checks, and automatic failover across multiple Gitaly nodes.</li>
+<li><strong>GitLab Shell:</strong> A lightweight SSH access server written in Go that handles SSH authentication, enforces key restrictions, and routes authorized Git-over-SSH commands to Gitaly or the internal Rails API.</li>
+<li><strong>GitLab Workhorse:</strong> A custom reverse proxy written in Go that sits between NGINX and Puma. It handles slow HTTP requests, large file downloads, Git HTTP operations, and direct-to-object-storage artifact uploads, offloading work from Ruby processes.</li>
+<li><strong>Job Plane:</strong> The isolated execution domain composed of GitLab Runners and build machines that execute pipeline scripts, compile binaries, and run container images outside the main control plane database context.</li>
+<li><strong>Memoization (Application Settings):</strong> The caching of frequently read system configuration settings and feature flags inside Redis in-memory key-value stores to avoid hitting the PostgreSQL database on every HTTP request.</li>
+<li><strong>PgBouncer:</strong> A lightweight, high-performance database connection pooler sitting between the Rails application nodes and PostgreSQL. It reduces memory and CPU overhead by multiplexing many application connection threads across a smaller pool of database processes.</li>
+<li><strong>Puma:</strong> The multi-threaded Rack HTTP web server used to host the core Ruby on Rails application inside the GitLab platform.</li>
+<li><strong>Puma Worker Killer:</strong> A memory-management daemon that monitors the resident set size (RSS) of Puma worker processes and automatically terminates workers exceeding memory thresholds, forcing a clean process restart to clear memory leaks.</li>
+<li><strong>Praefect:</strong> The high-availability translation proxy layer sitting in front of Gitaly nodes in a Gitaly Cluster, responsible for SQL-backed replication metadata tracking and strong consistency routing.</li>
+<li><strong>Rack Attack / Timeout:</strong> Middleware layers within the Ruby web server stack. <code>rack-attack</code> provides IP throttling and rate-limiting, while <code>rack-timeout</code> terminates HTTP requests that fail to complete within set timeframes (e.g., 60 seconds) prior to reaching Rails controllers.</li>
+<li><strong>Self-Hosted AI Gateway:</strong> A standalone instance of the GitLab AI Gateway deployed inside a customer's private cloud or air-gapped network. It processes local prompts and routes them to customer-owned LLM endpoints without data leaving the compliance boundary.</li>
+<li><strong>Sharded Gitaly:</strong> A storage architecture used in GitLab Dedicated where customer repositories are statically partitioned across multiple independent Gitaly virtual machines managed by automated storage weighting, rather than using a Praefect cluster.</li>
+<li><strong>Sidekiq:</strong> An efficient background job processing framework for Ruby that uses Redis to enqueue, schedule, and execute asynchronous tasks (e.g., webhooks, email notifications, pipeline generation).</li>
+<li><strong>Switchboard:</strong> The tenant management platform used by GitLab team members to configure, deploy, monitor, and maintain single-tenant customer instances in GitLab Dedicated and Dedicated for Government offerings.</li>
+</ul>
+</article>
+</body>
+</html>

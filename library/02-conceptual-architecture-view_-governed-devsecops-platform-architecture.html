@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conceptual Architecture View: Governed DevSecOps Platform Architecture</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>Conceptual Architecture View: Governed DevSecOps Platform Architecture</h1>
+<h3>1. Problem Statement &amp; Platform Purpose</h3>
+<p>Operational friction in enterprise software delivery stems primarily from fragmented systems of record. Source code, pipeline execution configurations, automated security scanning findings, and deployment evidence frequently reside in disconnected tools. This fragmentation prevents stakeholders from establishing a single, verifiable chain of custody for software changes. Without a unified system of record, validating compliance and security posture requires manual cross-tool reconciliation, which increases cycle times and introduces significant auditing blind spots.</p>
+<p>Architectural risk is further compounded by trust domain confusion between the application control plane and the job execution plane. When untrusted user code or build scripts execute on machines that lack strict structural boundary isolation from administrative control services, platform integrity is compromised. When these boundaries are absent or blurred, specific operational actors directly suffer: code <strong>Reviewers</strong> are forced to make approval decisions without unified, in-context security scan evidence, while <strong>Authorizing Officials</strong> cannot verify the execution boundaries of job execution workers or state with confidence which machines compiled and packaged operational software.</p>
+<p>To resolve these operational and architectural failures, the conceptual architecture establishes an integrated operating model that unites development, security, and operational governance within an explicit trust boundary.</p>
+<blockquote>
+<p><strong>Core Platform Purpose:</strong> Establishing a single, fully governed change path from initial human intent to running software, backed by a unified system of record for source code, pipeline evidence, and security findings across explicit control and job execution boundaries.</p>
+</blockquote>
+<hr />
+<h3>2. Operational Actors &amp; Goals</h3>
+<p>The platform defines explicit roles and trust levels for human and system actors to ensure proper segregation of duties and secure operation across trust boundaries.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Actor</th>
+<th style="text-align: left;">Role</th>
+<th style="text-align: left;">Operational Goal</th>
+<th style="text-align: left;">Trust Level</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Developer</strong></td>
+<td style="text-align: left;">Produces software changes</td>
+<td style="text-align: left;">Land a reviewed, tested, and compliant software change.</td>
+<td style="text-align: left;">Low until peer review and automated policy validation are complete.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reviewer</strong></td>
+<td style="text-align: left;">Approves proposed changes</td>
+<td style="text-align: left;">Verify code quality, test results, and security findings on a unified record prior to approval.</td>
+<td style="text-align: left;">Medium; authorized to approve changes within assigned projects.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Security</strong></td>
+<td style="text-align: left;">Sets scan and compliance policy</td>
+<td style="text-align: left;">Enforce global scanning policies and ensure findings cannot be bypassed or waived locally.</td>
+<td style="text-align: left;">High regarding policy definition; low regarding direct source code execution.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Platform Operator</strong></td>
+<td style="text-align: left;">Maintains the control plane</td>
+<td style="text-align: left;">Ensure platform availability, system backups, database integrity, and identity integrations.</td>
+<td style="text-align: left;">High within the administrative control plane tenant boundary.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Operator</strong></td>
+<td style="text-align: left;">Manages execution infrastructure</td>
+<td style="text-align: left;">Provision, patch, and rotate credentials for isolated worker machines executing pipeline jobs.</td>
+<td style="text-align: left;">High within worker execution boundary; isolated from control plane administration.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Identity Provider</strong></td>
+<td style="text-align: left;">Authenticates user identities</td>
+<td style="text-align: left;">Assert identity assertions, single sign-on (SSO), and hardware token compliance (e.g., PIV/CAC).</td>
+<td style="text-align: left;">High; external authority for identity verification.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Authorizing Official</strong></td>
+<td style="text-align: left;">Accepts operational residual risk</td>
+<td style="text-align: left;">Issue formal accreditation and authorization letters based on compliance evidence.</td>
+<td style="text-align: left;">Highest; ultimate authority for organizational platform usage.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Auditor</strong></td>
+<td style="text-align: left;">Evaluates compliance evidence</td>
+<td style="text-align: left;">Reconstruct change histories, pipeline executions, and gate approvals independently.</td>
+<td style="text-align: left;">Independent; read-only access across change records and evidence logs.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3. Capability Architecture Taxonomy</h3>
+<p>The conceptual architecture delivers nine core capabilities (C1 through C9) that form the foundation of a governed DevSecOps platform.</p>
+<ol>
+<li>
+<p><strong>C1. Change Record</strong><br />
+   * <strong>Core Function:</strong> Provides a unified logical record that holds source code diffs, peer discussions, pipeline links, and policy gate results.<br />
+   * <strong>Delivered Outcome:</strong> Consolidates source changes and review approvals into a single, traceable object for auditability.<br />
+   * <strong>Primary Actors:</strong> Developer, Reviewer.</p>
+</li>
+<li>
+<p><strong>C2. Pipeline Contract</strong><br />
+   * <strong>Core Function:</strong> Enforces a declared sequence of build, test, and security scanning jobs defined in repository configuration files.<br />
+   * <strong>Delivered Outcome:</strong> Guarantees predictable, automated, and policy-driven execution for every submitted change.<br />
+   * <strong>Primary Actors:</strong> Developer, Job Operator.</p>
+</li>
+<li>
+<p><strong>C3. Job Execution</strong><br />
+   * <strong>Core Function:</strong> Runs untrusted compilation, testing, and scanning workloads on dedicated execution workers isolated from the administrative control plane.<br />
+   * <strong>Delivered Outcome:</strong> Protects control plane databases and management interfaces from unauthorized access during workload execution.<br />
+   * <strong>Primary Actors:</strong> Job Operator.</p>
+</li>
+<li>
+<p><strong>C4. Finding Record</strong><br />
+   * <strong>Core Function:</strong> Aggregates static, dynamic, dependency, and container security scan results directly into the active change record.<br />
+   * <strong>Delivered Outcome:</strong> Delivers immediate security feedback to developers and reviewers before code is merged.<br />
+   * <strong>Primary Actors:</strong> Security, Reviewer.</p>
+</li>
+<li>
+<p><strong>C5. Artifact Store</strong><br />
+   * <strong>Core Function:</strong> Manages versioned storage for binary artifacts, container images, and software packages tied directly to generating pipelines.<br />
+   * <strong>Delivered Outcome:</strong> Establishes a verifiable chain of custody from source repository commits to deployable software packages.<br />
+   * <strong>Primary Actors:</strong> Developer, Job Operator.</p>
+</li>
+<li>
+<p><strong>C6. Git Storage</strong><br />
+   * <strong>Core Function:</strong> Serves and manages version control history through dedicated Remote Procedure Call (RPC) services rather than direct application disk access.<br />
+   * <strong>Delivered Outcome:</strong> Ensures repository data integrity, abstraction, and high-availability storage management.<br />
+   * <strong>Primary Actors:</strong> Platform Operator.</p>
+</li>
+<li>
+<p><strong>C7. Offering Choice</strong><br />
+   * <strong>Core Function:</strong> Provides identical underlying platform capabilities across distinct deployment operational models and impact levels.<br />
+   * <strong>Delivered Outcome:</strong> Enables organizations to align operational control and regulatory compliance requirements without altering core workflow capabilities.<br />
+   * <strong>Primary Actors:</strong> Authorizing Official, Platform Operator.</p>
+</li>
+<li>
+<p><strong>C8. Identity Handoff</strong><br />
+   * <strong>Core Function:</strong> Delegates user authentication and hardware token assertion to enterprise identity infrastructure.<br />
+   * <strong>Delivered Outcome:</strong> Enforces centralized access control, single sign-on, and regulatory identity compliance.<br />
+   * <strong>Primary Actors:</strong> Identity Provider.</p>
+</li>
+<li>
+<p><strong>C9. AI Assistance</strong><br />
+   * <strong>Core Function:</strong> Delivers context-aware assistance across the software lifecycle via governed data paths and explicit trust boundaries.<br />
+   * <strong>Delivered Outcome:</strong> Enhances engineering productivity while restricting AI model training and data transmission based on organizational governance rules.<br />
+   * <strong>Primary Actors:</strong> Platform Operator, Authorizing Official.</p>
+</li>
+</ol>
+<h4>Enterprise Architecture Framework Mapping</h4>
+<p>To support formal enterprise architecture governance, the conceptual capabilities map directly to standardized frameworks including TOGAF ADM phases and DoDAF viewpoints:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Conceptual Capability</th>
+<th style="text-align: left;">TOGAF ADM Alignment</th>
+<th style="text-align: left;">DoDAF Viewpoint Mapping</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>C1. Change Record</strong></td>
+<td style="text-align: left;">Architecture Vision (Phase A), Business Architecture (Phase B)</td>
+<td style="text-align: left;">OV-1 High-Level Operational Concept, DIV-1 Conceptual Data Model</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C2. Pipeline Contract</strong></td>
+<td style="text-align: left;">Business Architecture (Phase B), Information Systems (Phase C)</td>
+<td style="text-align: left;">OV-5b Operational Activity Model, CV-2 Capability Taxonomy</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C3. Job Execution</strong></td>
+<td style="text-align: left;">Information Systems (Phase C), Technology Architecture (Phase D)</td>
+<td style="text-align: left;">SV-1 Systems Interface Description, OV-2 Operational Resource Flow</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C4. Finding Record</strong></td>
+<td style="text-align: left;">Business Architecture (Phase B), Information Systems (Phase C)</td>
+<td style="text-align: left;">OV-6c State Transition Description, DIV-1 Conceptual Data Model</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C5. Artifact Store</strong></td>
+<td style="text-align: left;">Information Systems Architecture (Phase C: Data)</td>
+<td style="text-align: left;">DIV-2 Logical Data Model, SV-4 Systems Functionality</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C6. Git Storage</strong></td>
+<td style="text-align: left;">Information Systems Architecture (Phase C: Data/App)</td>
+<td style="text-align: left;">SV-1 Systems Interface Description, DIV-1 Conceptual Data Model</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C7. Offering Choice</strong></td>
+<td style="text-align: left;">Architecture Vision (Phase A), Opportunities &amp; Solutions (Phase E)</td>
+<td style="text-align: left;">CV-2 Capability Taxonomy, StdV-1 Standards Profile</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C8. Identity Handoff</strong></td>
+<td style="text-align: left;">Business Architecture (Phase B), Security Architecture</td>
+<td style="text-align: left;">OV-2 Operational Resource Flow, SV-6 Systems Resource Flow</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C9. AI Assistance</strong></td>
+<td style="text-align: left;">Architecture Vision (Phase A), Architecture Governance</td>
+<td style="text-align: left;">CV-2 Capability Taxonomy, OV-3 Operational Resource Flow</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>4. Key Concepts &amp; Conceptual Data Entity Relationships</h3>
+<p>The platform domain is structured around core conceptual data entities that govern the software lifecycle from initial intent to deployment.</p>
+<h4>Conceptual Entity Definitions</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Concept / Entity</th>
+<th style="text-align: left;">Conceptual Definition &amp; Structural Relationship</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Offering Type</strong></td>
+<td style="text-align: left;">The operational deployment configuration defining platform ownership boundaries, tenant isolation mechanisms, and regulatory compliance impact levels. Defines the boundary within which Change Records and Pipeline Contracts operate.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Authorization Letter</strong></td>
+<td style="text-align: left;">The formal accreditation document granted by an Authorizing Official accepting residual operational risk for a specific Offering Type deployment.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Change Record</strong></td>
+<td style="text-align: left;">The primary unit of change approval. Contains repository diffs, peer discussion threads, pipeline execution statuses, and aggregated security findings. Linked to a Project and triggers a Pipeline Contract.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pipeline Contract</strong></td>
+<td style="text-align: left;">The declarative configuration specifying the stages, jobs, and execution environment required to validate a change. Instantiated by a Change Record and dispatches Executable Jobs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Executable Job</strong></td>
+<td style="text-align: left;">A discrete execution unit defined within a Pipeline Contract. Dispatched to a worker in the Job Plane using a scoped authentication token; writes back execution logs, findings, and artifacts.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Security Finding</strong></td>
+<td style="text-align: left;">A normalized vulnerability record generated by security scanning tools during job execution. Attached to the Change Record and evaluated against Security policy rules.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Artifact Store</strong></td>
+<td style="text-align: left;">A versioned repository for build binaries, container images, and software packages produced by an Executable Job. Linked to the generating Pipeline Contract and Change Record.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Control / Job Planes</strong></td>
+<td style="text-align: left;">The architectural boundary separating platform management, application logic, and system-of-record storage (Control Plane) from untrusted pipeline script execution machines (Job Plane).</td>
+</tr>
+</tbody>
+</table>
+<h4>Lifecycle Narrative of a Governed Change</h4>
+<ol>
+<li><strong>Compliance Boundary Establishment &amp; Intent Submission:</strong> Prior to code entry, the enterprise baseline is established when an Authorizing Official issues an <code>Authorization Letter</code> accrediting a specific <code>Offering Type</code> for a targeted regulatory impact level. Within this established compliance boundary, a Developer creates a change proposal, instantiating a <code>Change Record</code>. This record references a specific source code diff within the Git Storage layer and triggers an initial identity assertion check against the <code>Identity Provider</code>.</li>
+<li><strong>Pipeline Contract Evaluation:</strong> The Control Plane evaluates the project's repository configuration file to construct a <code>Pipeline Contract</code>. The contract breaks the pipeline down into discrete, ordered stages (e.g., build, test, scan) containing individual <code>Executable Jobs</code>.</li>
+<li><strong>Job Plane Dispatch &amp; Execution:</strong> The Control Plane registers the <code>Executable Jobs</code> and issues short-lived, scoped execution tokens. Workers residing in the isolated Job Plane poll for work over secure outbound channels, retrieve job payloads, execute the required build scripts or scanners, and push generated outputs back across the trust boundary.</li>
+<li><strong>Finding &amp; Artifact Aggregation:</strong> As <code>Executable Jobs</code> complete, worker agents upload compiled packages to the <code>Artifact Store</code> and write normalized <code>Security Finding</code> entries back to the Control Plane. These findings automatically populate directly within the active <code>Change Record</code>.</li>
+<li><strong>Review and Policy Enforcement:</strong> The Reviewer evaluates the <code>Change Record</code>, reviewing peer discussion threads, automated pipeline statuses, and integrated <code>Security Finding</code> entries. Security policies managed in the Control Plane evaluate finding severities to determine whether issues block the merge path or require formal risk waivers.</li>
+<li><strong>Authorization and Merge:</strong> Once all pipeline contract gates pass and required reviewer approvals are captured, the <code>Change Record</code> is merged into the primary repository branch, generating an immutable audit entry verified against the operational <code>Authorization Letter</code>.</li>
+</ol>
+<hr />
+<h3>5. Conceptual Operational Model: Control Plane vs. Job Plane</h3>
+<p>The platform maintains an explicit structural boundary between administrative management services (Control Plane) and arbitrary code execution environments (Job Execution Plane). This separation prevents untrusted workloads from accessing underlying administrative databases or central platform state.</p>
+<ul>
+<li><strong>Organization Boundary</strong></li>
+<li>Human actors (Developers, Reviewers, Security) authenticate against the external Identity Provider using enterprise credentials and hardware tokens (e.g., PIV/CAC).</li>
+<li>Developers send change intent (version control pushes, change record creations) across the boundary into the Control Plane.</li>
+<li>
+<p>Security managers define global compliance policies and required scanner configurations within the Control Plane.</p>
+</li>
+<li>
+<p><strong>Control Plane (System of Record &amp; Management Domain)</strong></p>
+</li>
+<li><strong>Front Door &amp; Routing Layer:</strong> Authenticates incoming traffic, terminates external TLS connections, and routes web requests and Git RPC calls to internal application services.</li>
+<li><strong>Application Core:</strong> Manages project permissions, Change Records, approval workflows, and Security Finding aggregations. Maintains central database state and relational change records.</li>
+<li><strong>Git Storage Layer:</strong> Manages repository version histories on dedicated storage media, serving raw Git data exclusively through remote procedure calls (RPC). Abstracting version control behind an RPC service decouples web and application processing servers from direct file-system disk access, completely eliminating local disk coupling and enforcing centralized data access policies.</li>
+<li>
+<p><strong>Job Queue Service:</strong> Receives execution requests from the application core, generates short-lived runner job tokens, and queues Executable Job payloads for retrieval.</p>
+</li>
+<li>
+<p><strong>Job Execution Plane (Worker &amp; Task Execution Domain)</strong></p>
+</li>
+<li><strong>Worker Nodes:</strong> Isolated physical or virtual execution environments running dedicated worker agents. Workers exist in a distinct trust domain completely separated from the Control Plane.</li>
+<li><strong>Payload Retrieval:</strong> Worker agents poll the Control Plane's job queue over secure outbound connections (HTTPS), acquiring queued job payloads and temporary job execution tokens.</li>
+<li><strong>Isolated Execution:</strong> Workers clone repository code, download designated execution container images, and execute build scripts, unit tests, and security tools locally within their execution boundary.</li>
+<li><strong>Feedback Flow:</strong><ul>
+<li><strong>Scan Findings &amp; Logs:</strong> Worker agents stream real-time execution logs and structured scan results back to the Control Plane application core to populate the active Change Record.</li>
+<li><strong>Artifact Uploads:</strong> Built packages, container layers, and binaries are uploaded directly from the worker to the Artifact Store.</li>
+</ul>
+</li>
+<li><strong>Token Revocation &amp; Trust Boundary Protection:</strong> Upon job completion or execution timeout, the temporary job token is invalidated, revoking the worker's access to Control Plane endpoints. Limiting worker token scope ensures that even if a worker node is exploited or compromised during arbitrary code execution, the attacker cannot escalate privileges into a Control Plane compromise or gain administrative access to the central System of Record database.</li>
+</ul>
+<hr />
+<h3>6. Capability-to-Source Mapping &amp; Silence Register</h3>
+<h4>Capability Traceability Matrix</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Capability ID</th>
+<th style="text-align: left;">Capability Name</th>
+<th style="text-align: left;">Supporting Source Anchor(s)</th>
+<th style="text-align: left;">Evidence Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>C1</strong></td>
+<td style="text-align: left;">Change Record</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code></td>
+<td style="text-align: left;">Single system of record combining source diffs, peer discussions, and pipeline gate results into a unified logical object.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C2</strong></td>
+<td style="text-align: left;">Pipeline Contract</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code>, <code>Get started with GitLab CI/CD</code></td>
+<td style="text-align: left;">Standardized execution sequence defining stages, jobs, scripts, and variables via repository configuration files.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C3</strong></td>
+<td style="text-align: left;">Job Execution</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code>, <code>03-source-ledger.md</code> [S3]</td>
+<td style="text-align: left;">Structural isolation of untrusted build workloads onto dedicated workers distinct from administrative control services.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C4</strong></td>
+<td style="text-align: left;">Finding Record</td>
+<td style="text-align: left;"><code>20-view-01-conceptual.md</code>, <code>Application security testing</code></td>
+<td style="text-align: left;">Automated security scanning embedded into execution pipelines, writing normalized findings directly into active change records.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C5</strong></td>
+<td style="text-align: left;">Artifact Store</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code></td>
+<td style="text-align: left;">Versioned storage for built packages, binaries, and container images linked directly to generating source code repositories.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C6</strong></td>
+<td style="text-align: left;">Git Storage</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code>, <code>03-source-ledger.md</code> [S5]</td>
+<td style="text-align: left;">Abstraction of repository version control access behind dedicated RPC services to prevent application servers from directly opening repository disks.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C7</strong></td>
+<td style="text-align: left;">Offering Choice</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code>, <code>GitLab Dedicated architecture</code></td>
+<td style="text-align: left;">Consistent software capabilities delivered across multi-tenant SaaS, self-managed, dedicated tenant, and government cloud deployment choices.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C8</strong></td>
+<td style="text-align: left;">Identity Handoff</td>
+<td style="text-align: left;"><code>20-view-01-conceptual.md</code>, <code>Dedicated for Government shared responsibility</code></td>
+<td style="text-align: left;">User authentication delegated to external organizational IdPs supporting SAML, OIDC, and mandatory hardware tokens (PIV/CAC).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>C9</strong></td>
+<td style="text-align: left;">AI Assistance</td>
+<td style="text-align: left;"><code>01-mindmap.md</code>, <code>20-view-01-conceptual.md</code>, <code>20-view-04-integration-ai.md</code></td>
+<td style="text-align: left;">Context-aware developmental assistance delivered via managed or self-hosted gateway model paths with strict data flow boundaries.</td>
+</tr>
+</tbody>
+</table>
+<h4>Architectural Silence &amp; Unresolved Questions</h4>
+<ul>
+<li><strong>[SOURCE SILENCE]</strong> <strong>Job Plane Operator Assignment Across Regulatory Boundaries:</strong> The source context is explicitly silent regarding who operates the job execution plane across different regulatory impact levels (e.g., distinguishing platform provider hosting from customer self-managed worker execution across high-impact boundaries).</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>Agent Platform / External Agent Authorization:</strong> The sources detail self-hosted and managed AI data paths but remain silent on whether automated agent platform flows or external third-party collaboration webhooks (e.g., chat/messaging integrations) are formally authorized within high-impact government compliance boundaries.</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>Hosted FIPS Runner Availability:</strong> Source material notes that self-managed FIPS execution workers are required outside high-impact tenant boundaries, but is silent on whether hosted, provider-managed FIPS-compliant execution workers are available or supported.</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>AI Model Provider Data Retention:</strong> The sources detail self-hosted AI gateway options but remain silent on exact data payload retention, logging policies, and model training protections enforced by third-party model providers on the public managed execution path.</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>External Integration Protocol Authorization:</strong> The sources do not define explicit protocol specifications or authorization boundaries for integrating external third-party webhooks within single-tenant government boundaries.</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>Agency Residual Risk Acceptance Templates:</strong> The source text notes that vendor cloud authorization package listings (e.g., FedRAMP Marketplace listings) do not automatically constitute an agency-specific Authorization to Operate (ATO), but is silent on the standardized template or procedure required for agency-level residual risk acceptance.</li>
+<li><strong>[SOURCE SILENCE]</strong> <strong>Multi-Tenant vs. Single-Tenant Performance Benchmarks:</strong> Peer-reviewed benchmark data comparing system performance and resource overhead across multi-tenant and single-tenant operational models under identical user transaction loads is absent from the provided source context.</li>
+</ul>
+</article>
+</body>
+</html>

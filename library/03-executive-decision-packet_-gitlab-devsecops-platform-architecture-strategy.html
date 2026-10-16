@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Executive Decision Packet: GitLab DevSecOps Platform Architecture Strategy</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>Executive Decision Packet: GitLab DevSecOps Platform Architecture Strategy</h1>
+<h2>1. First 60 seconds (spoken script)</h2>
+<h3>1.1 Spoken Opening Script</h3>
+<p>"We recommend approving the immediate migration of our enterprise DevSecOps platform to GitLab Dedicated for Government under FedRAMP Moderate ATO FR2411959145. This deployment eliminates toolchain fragmentation where 60% of vulnerabilities currently go undetected until post-merge, isolates runner execution boundaries, and offloads control plane infrastructure operations to GitLab—though exact implementation costs remain <code>UNKNOWN - will be known by Q3 enterprise budget review via CFO audit</code>. Today, we require the executive committee to authorize single-tenant onboarding in AWS GovCloud US-West, commit internal engineering capacity to operate external customer-hosted FIPS runners, and approve immediate identity integration with our agency IdP."</p>
+<h3>1.2 Stakes Sentence</h3>
+<p>If we do nothing, our software supply chain remains exposed to unmanaged runner token compromise and post-merge vulnerabilities, putting our agency ATO at risk by <code>UNKNOWN - will be known by Q4 authorization review via Chief Information Security Officer audit</code>. If we act, we establish a FedRAMP Moderate authorized, single-tenant DevSecOps baseline under ATO FR2411959145 by <code>UNKNOWN - will be known by 90-day onboarding completion via Lead Systems Architect</code> at <code>[Cost: UNKNOWN - will be known by Q3 enterprise budget review via Chief Financial Officer audit]</code> and <code>[Risk: customer operation of external FIPS runner infrastructure]</code>.</p>
+<hr />
+<h2>2. Five-slide spine (titles + contextual reference)</h2>
+<h3>Slide 1: Ask + Outcome</h3>
+<ul>
+<li><strong>Action Title:</strong> Migrating to GitLab Dedicated for Government Establishes a FedRAMP Moderate Control Plane While Offloading Infrastructure Maintenance.</li>
+<li><strong>Job of the Slide:</strong> Establish executive agreement to adopt a single-tenant DevSecOps platform operating within a FedRAMP Moderate authorized government boundary.</li>
+<li><strong>Body Content Outline:</strong></li>
+<li>Single-tenant infrastructure isolation hosted in AWS GovCloud US-West, fully provisioned and operated via GitLab Switchboard and Amp <code>[S6]</code>, <code>[S7]</code>.</li>
+<li>Baseline FedRAMP Moderate Authority to Operate (FR2411959145) achieved May 19, 2025, under GSA sponsorship <code>[S10]</code>, <code>[S11]</code>.</li>
+<li>Strict operational boundary separation: control plane infrastructure is managed by GitLab, while application administration and job execution remain customer-managed <code>[S8]</code>, <code>[S9]</code>.</li>
+<li><strong>Written So-what Line:</strong> Migrating to Dedicated for Government offloads control plane compliance and infrastructure operations to GitLab while maintaining full customer control over application administration and data.</li>
+<li><strong>Source Anchor:</strong> <code>[S6]</code>, <code>[S7]</code>, <code>[S8]</code>, <code>[S10]</code>, <code>[S11]</code></li>
+</ul>
+<h3>Slide 2: Why Now / Stakes</h3>
+<ul>
+<li><strong>Action Title:</strong> Current Toolchain Fragmentation Exposes 60% of Vulnerabilities Post-Merge and Introduces Critical Trust Boundary Risks Outside the FedRAMP Boundary.</li>
+<li><strong>Job of the Slide:</strong> Demonstrate the immediate compliance, security, and operational hazards of maintaining the current fragmented status quo.</li>
+<li><strong>Body Content Outline:</strong></li>
+<li>Toolchain fragmentation drives excess expenditure and security gaps, where 64% of organizations require tool consolidation and 60% of vulnerabilities are discovered post-merge <code>[S11]</code>.</li>
+<li>FedRAMP Marketplace listing (FR2411959145) provides infrastructure baseline authorization but does not substitute for required agency-specific ATO validation <code>[S8]</code>, <code>[S10]</code>.</li>
+<li>Critical trust boundary exposure: stolen runner tokens grant attackers runner-domain execution rights, while unauthorized Duo Agent Platform flows risk out-of-boundary data transfers <code>[S8]</code>, <code>[S12]</code>.</li>
+<li><strong>Written So-what Line:</strong> Delaying platform consolidation perpetuates software supply chain vulnerabilities and risks non-compliance with federal zero-trust pipeline directives.</li>
+<li><strong>Source Anchor:</strong> <code>[S8]</code>, <code>[S10]</code>, <code>[S11]</code>, <code>[S12]</code>, <code>[S18]</code></li>
+</ul>
+<h3>Slide 3: The Change or Options</h3>
+<ul>
+<li><strong>Action Title:</strong> Deploying Dedicated for Government Mandates Customer-Managed External FIPS Runners and In-Boundary Self-Hosted AI Gateway Integration.</li>
+<li><strong>Job of the Slide:</strong> Define the target architectural transition, trust boundaries, and platform deployment mechanics across offerings.</li>
+<li><strong>Body Content Outline:</strong></li>
+<li>Offering topology: Dedicated for Government operates on single-tenant AWS GovCloud US-West infrastructure using sharded Gitaly storage (not Gitaly Cluster/Praefect) <code>[S6]</code>, <code>[S7]</code>.</li>
+<li>Infrastructure vs job plane separation: customer hosts external FIPS-compliant runners outside the tenant boundary, integrated via agency SAML/OIDC and PIV/CAC IdP <code>[S8]</code>, <code>[S9]</code>.</li>
+<li>AI control domain: enforces self-hosted AI Gateway for local model runtimes; Duo Agent Platform flows and external agent orchestration are explicitly unauthorized on Dedicated for Government <code>[S8]</code>, <code>[S13]</code>.</li>
+<li><strong>Written So-what Line:</strong> Achieving FedRAMP compliance requires accepting clear boundary demarcation: GitLab operates the control plane, while agency engineering operates external FIPS runners and identity federation.</li>
+<li><strong>Source Anchor:</strong> <code>[S6]</code>, <code>[S7]</code>, <code>[S8]</code>, <code>[S9]</code>, <code>[S13]</code></li>
+</ul>
+<h3>Slide 4: Value Proof</h3>
+<ul>
+<li><strong>Action Title:</strong> Unified DevSecOps Integration Consolidates Toolchains, Stabilizes Runtime Performance, and Eliminates Internal Authorization Loops.</li>
+<li><strong>Job of the Slide:</strong> Prove technical, diagnostic, and operational efficacy using source-grounded architectural evidence and literature.</li>
+<li><strong>Body Content Outline:</strong></li>
+<li>Embedded toolchain consolidation: SAST, DAST, Container Scanning, and Dependency-Check write findings into unified merge requests, validating Sandhya Guduru's (IJSR 2020) framework for automated pipeline security and SLSA governance <code>[S4]</code>, <code>[S20]</code>.</li>
+<li>Architecture decoupling: Will Chandler and James Liu demonstrate that offloading Git RPC storage to Gitaly prevents application server disk locking, isolating storage execution from web worker memory cycles <code>[S5]</code>, <code>[S15]</code>, <code>[S16]</code>.</li>
+<li>Performance and authorization protection: mitigates Puma worker exhaustion (20–30s recycling cycles, 60s web timeouts) and offloads internal <code>/api/v4/internal/allowed</code> synchronous gRPC permission checks from local customer infrastructure to GitLab-managed control plane compute <code>[S5]</code>, <code>[S17]</code>.</li>
+<li><strong>Written So-what Line:</strong> Unifying source, pipeline evidence, and security findings inside one governed platform eliminates multi-tool overhead while eliminating local compute exhaustion from internal authorization loops.</li>
+<li><strong>Source Anchor:</strong> <code>[S4]</code>, <code>[S5]</code>, <code>[S15]</code>, <code>[S16]</code>, <code>[S17]</code>, <code>[S18]</code>, <code>[S20]</code></li>
+</ul>
+<h3>Slide 5: Decision Today</h3>
+<ul>
+<li><strong>Action Title:</strong> Executive Authorization Today Initiates the 90-Day Execution Roadmap and Pivots Internal Capacity to External Runner Governance.</li>
+<li><strong>Job of the Slide:</strong> Secure formal authorization for immediate implementation steps and capacity reallocations.</li>
+<li><strong>Body Content Outline:</strong></li>
+<li>Capacity trade-off: eliminate internal engineering upkeep of control plane HA infrastructure (Puma/Postgres/Gitaly VMs) to focus internal teams on external FIPS runner governance and application security policies <code>[S8]</code>, <code>[S17]</code>.</li>
+<li>Financial and timeline parameters: implementation cost is <code>UNKNOWN - will be known by Q3 enterprise budget review via CFO audit</code>; migration completion target is <code>UNKNOWN - will be known by baseline deployment milestone via Lead Enterprise Architect</code>.</li>
+<li>Next 90 Days Execution: integrate agency identity provider (SAML/OIDC with PIV/CAC), deploy external FIPS runners outside the boundary, and configure S3 audit log pipelines <code>[S8]</code>, <code>[S9]</code>.</li>
+<li><strong>Written So-what Line:</strong> Approving today initiates immediate agency IdP integration and runner provisioning, shifting engineering focus from infrastructure maintenance to secure delivery.</li>
+<li><strong>Source Anchor:</strong> <code>[S8]</code>, <code>[S9]</code>, <code>[S10]</code>, <code>[S17]</code></li>
+</ul>
+<p><em>Five live slides in the room; supporting architectural views, source ledgers, and deep failure-mode mechanics remain in the appendix.</em></p>
+<h3>Appendix Topic Index</h3>
+<ul>
+<li>Conceptual Architecture View (OV-1, Actor/Capability Mapping)</li>
+<li>Logical Architecture View (Component Flows, Entity ERD, Data Models)</li>
+<li>Physical Architecture View (Offering Comparison, Reference Architectures, GovCloud Topology)</li>
+<li>Gitaly gRPC Storage Mechanics &amp; Synchronous <code>/api/v4/internal/allowed</code> Authorization Loops</li>
+<li>Puma Worker Killer Memory Recycling &amp; 60-Second Web Timeout Failure Mechanics</li>
+<li>AI Gateway Network Topologies &amp; In-Boundary Model Data Paths</li>
+<li>Detailed Failure Modes &amp; Mitigation Controls (Runner Token Theft, Split-Brain Storage, Memory Exhaustion)</li>
+</ul>
+<hr />
+<h2>3. Five killer questions (20-second answers)</h2>
+<h3>1. Why now?</h3>
+<ul>
+<li><strong>Spoken Answer (20s):</strong> GitLab Dedicated for Government achieved FedRAMP Moderate ATO authorization under FR2411959145 on May 19, 2025. Current toolchain fragmentation leaves 60% of security vulnerabilities undiscovered until after code is merged into test environments, presenting unacceptable supply chain compliance risks under current federal zero-trust mandates.</li>
+<li><strong>Elevate (1 line):</strong> Immediate transition eliminates toolchain security exposure while establishing a FedRAMP-compliant foundation for agency cloud transformation.</li>
+</ul>
+<h3>2. What if we wait? (dated cost of no)</h3>
+<ul>
+<li><strong>Spoken Answer (20s):</strong> Delaying maintains manual compliance overhead across six or more disparate security tools, leaves unmanaged build runners exposed to token theft, and prolongs post-merge vulnerability exposure. Precise financial costs of delay are <code>UNKNOWN - will be known by Q3 financial audit via Chief Financial Officer evaluation</code>.</li>
+<li><strong>Elevate (1 line):</strong> Waiting accumulates compounding compliance debt and increases software supply chain exposure across ungoverned execution domains.</li>
+</ul>
+<h3>3. Who else has done this? (benchmark or analogue from sources only)</h3>
+<ul>
+<li><strong>Spoken Answer (20s):</strong> Public sector implementation is benchmarked by the GSA-sponsored FedRAMP Moderate authorization (FR2411959145) and TX_RAMP certification for state agencies, aligning with NIST SP 800-204D DevSecOps pipeline security architecture standards.</li>
+<li><strong>Elevate (1 line):</strong> While FedRAMP certification proves vendor baseline compliance, federal shared responsibility mandates that our agency Authorizing Official issue the final agency-specific ATO.</li>
+</ul>
+<h3>4. What are we stopping? (capacity / tradeoff)</h3>
+<ul>
+<li><strong>Spoken Answer (20s):</strong> We are stopping internal engineering maintenance of control plane infrastructure—including Rails/Puma application tuning, PostgreSQL databases, and Gitaly VM cluster management—while reallocating staff to administer application policies and manage external customer-hosted FIPS runners.</li>
+<li><strong>Elevate (1 line):</strong> We pivot engineering resources from low-value server maintenance to high-value application security and pipeline delivery.</li>
+</ul>
+<h3>5. What if this slips? (risk and recovery)</h3>
+<ul>
+<li><strong>Spoken Answer (20s):</strong> Schedule slips risk temporary operation on non-compliant execution domains and unmanaged runner token exposure. Because stolen runner tokens grant execution rights within the runner domain, placing external runners outside the tenant boundary ensures control plane isolation. We mitigate slip risk via modular onboarding: integrating agency IdP first, then migrating external runners.</li>
+<li><strong>Elevate (1 line):</strong> Phased deployment guarantees continuous control plane governance even if external runner provisioning experiences schedule variance.</li>
+</ul>
+<hr />
+<h2>4. Uncertainty register</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Gap</th>
+<th style="text-align: left;">Why it matters to the decision</th>
+<th style="text-align: left;">What will be known</th>
+<th style="text-align: left;">By when</th>
+<th style="text-align: left;">Owner or method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Precise commercial per-seat SKU pricing &amp; total implementation cost</td>
+<td style="text-align: left;">Determines precise financial budget authorization required from executive committee</td>
+<td style="text-align: left;">Exact financial expenditure and licensing costs</td>
+<td style="text-align: left;"><code>UNKNOWN - will be known by Q3 enterprise budget review</code></td>
+<td style="text-align: left;">Chief Financial Officer / Commercial Sales Quote</td>
+</tr>
+<tr>
+<td style="text-align: left;">Target migration completion and full ATO cutover date</td>
+<td style="text-align: left;">Establishes project delivery schedule and agency operational transition timeline</td>
+<td style="text-align: left;">Final operational migration date and agency ATO sign-off</td>
+<td style="text-align: left;"><code>UNKNOWN - will be known by baseline deployment milestone</code></td>
+<td style="text-align: left;">Project Lead / Lead Systems Architect</td>
+</tr>
+<tr>
+<td style="text-align: left;">Delivery date for agency-specific Authority to Operate (ATO)</td>
+<td style="text-align: left;">FedRAMP Marketplace listing (FR2411959145) does not constitute an agency-specific ATO to operate</td>
+<td style="text-align: left;">Formal Agency AO signed Authorization Letter</td>
+<td style="text-align: left;"><code>UNKNOWN - will be known by post-audit review</code></td>
+<td style="text-align: left;">Agency Authorizing Official (AO)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Availability timeline for GitLab-hosted FIPS runners on Dedicated for Government</td>
+<td style="text-align: left;">Customer currently must host runners outside tenant; hosted FIPS runners would eliminate customer runner infra burden</td>
+<td style="text-align: left;">Product roadmap delivery status for hosted FIPS runners</td>
+<td style="text-align: left;"><code>UNKNOWN - will be known by future release documentation review</code></td>
+<td style="text-align: left;">GitLab Product Management / Roadmap releases</td>
+</tr>
+<tr>
+<td style="text-align: left;">Future support for DoD IL5, IL6, Secret, or air-gapped environments on Dedicated for Government</td>
+<td style="text-align: left;">Dedicated for Government currently operates only at FedRAMP Moderate on AWS GovCloud US-West</td>
+<td style="text-align: left;">Availability of IL5/IL6/Secret deployment offerings</td>
+<td style="text-align: left;"><code>UNKNOWN - will be known by vendor roadmap announcement</code></td>
+<td style="text-align: left;">GitLab Public Sector Strategy Lead</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>5. Readiness falsifiers</h2>
+<ol>
+<li><strong>Can the Ask be stated in one breath?</strong><br />
+   * <strong>Yes.</strong> The core recommendation ("Approve immediate migration of our enterprise DevSecOps platform to GitLab Dedicated for Government under FedRAMP Moderate ATO FR2411959145") is delivered as a concise opening line in Subsection 1.1.</li>
+<li><strong>Is value named in cash, risk, customers, or time with a date?</strong><br />
+   * <strong>Yes.</strong> Value is explicitly articulated in risk (mitigating 60% post-merge vulnerability exposure, runner token theft) and compliance timelines (FedRAMP Moderate ATO FR2411959145 achieved May 19, 2025). Missing financial numbers are formally tagged using the mandated <code>UNKNOWN</code> pattern.</li>
+<li><strong>Would a CEO leaving at minute five still know the Ask and the cost of no?</strong><br />
+   * <strong>Yes.</strong> Section 1 delivers the exact Ask, business impact, decision required, and explicit Stakes Sentence within the first 60 seconds of the briefing.</li>
+<li><strong>Do the five titles alone tell the story?</strong><br />
+   * <strong>Yes.</strong> The action titles for Slides 1–5 form a complete, continuous narrative logic: Approve Migration &amp; Offload Control Plane (Slide 1) -&gt; Toolchain Fragmentation Threat/Stakes (Slide 2) -&gt; Deployment Mechanics &amp; FIPS Runners (Slide 3) -&gt; Performance &amp; Diagnostic Value Proof (Slide 4) -&gt; 90-Day Decision &amp; Capacity Trade-off (Slide 5).</li>
+<li><strong>Are Run and Change kept separate where relevant?</strong><br />
+   * <strong>Yes.</strong> The packet explicitly separates "Run" (GitLab managing control plane infrastructure, Puma/Postgres/Gitaly HA VM operations) from "Change" (agency migrating to single-tenant Dedicated for Government, deploying external FIPS runners, and integrating agency SAML/OIDC/PIV/CAC IdP).</li>
+</ol>
+<hr />
+<h2>6. Silence and out of scope</h2>
+<ul>
+<li><strong>Commercial License Pricing &amp; SKUs:</strong> Primary sources provide zero data on per-seat dollar costs, licensing tier pricing structures, or professional migration service fees.</li>
+<li><strong>DoD IL5 / IL6 / Secret / Air-Gapped Cloud Availability:</strong> Sources explicitly state that DoD IL5, IL6, Secret, and air-gapped environments are <strong>not</strong> supported on Dedicated for Government today (Self-Managed is the specified path for IL5/air-gap).</li>
+<li><strong>Duo Agent Platform Authorization on Dedicated for Government:</strong> Sources explicitly confirm that Duo Agent Platform flows and external agent orchestration are <strong>not authorized</strong> on Dedicated for Government.</li>
+<li><strong>GitLab-Hosted FIPS Runners for Dedicated for Government:</strong> Sources explicitly indicate that hosted FIPS runners are not currently available for Dedicated for Government; customer self-managed external runners are mandatory.</li>
+<li><strong>Third-Party Webhook Authorization (e.g., Slack / Microsoft Teams):</strong> Sources are silent on whether Slack or Microsoft Teams outbound webhook integrations are authorized within the FedRAMP Moderate boundary.</li>
+<li><strong>Comparative Benchmark Performance Metrics:</strong> Sources contain no head-to-head empirical benchmark data comparing GitLab performance directly against GitHub Advanced Security or Azure DevOps on identical workloads.</li>
+</ul>
+</article>
+</body>
+</html>

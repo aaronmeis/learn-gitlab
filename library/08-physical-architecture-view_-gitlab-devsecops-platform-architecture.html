@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical Architecture View: GitLab DevSecOps Platform Architecture</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>Physical Architecture View: GitLab DevSecOps Platform Architecture</h1>
+<hr />
+<h3>1. Executive Physical Architecture Overview &amp; System Boundary</h3>
+<h4>1.1 Platform Scope and High-Level Architecture</h4>
+<ul>
+<li><strong>Platform Scope:</strong> The GitLab Development, Security, and Operations (DevSecOps) Platform provides a unified, governed software change path across the full software development lifecycle (SDLC)—spanning planning, source code management (SCM), continuous integration and continuous deployment (CI/CD), application security testing, container/package artifact registries, and environment deployment. The physical implementation of the platform is instantiated across four distinct deployment offerings:</li>
+<li>Multi-Tenant Software as a Service (SaaS) (<code>GitLab.com</code>)</li>
+<li>Self-Managed (customer-deployed on private infrastructure or commercial clouds)</li>
+<li>Single-Tenant Managed SaaS (<code>GitLab Dedicated</code>)</li>
+<li>Federal Single-Tenant Managed SaaS (<code>GitLab Dedicated for Government</code>)</li>
+<li><strong>Control Plane vs. Job Execution Plane Split:</strong> The physical architecture enforces an explicit structural separation between two primary operational domains:</li>
+<li><strong>Control Plane:</strong> Responsible for user authentication, request routing, state management, relational metadata persistence, Git repository operations, and pipeline orchestration. Bounded strictly by Puma's default 60-second request timeout, synchronous Hypertext Transfer Protocol (HTTP) and Secure Shell (SSH) user interactions are decoupled from heavy workloads.</li>
+<li><strong>Job Execution Plane:</strong> Responsible for compiling code, executing customer pipeline scripts, running static and dynamic application security scanners, and processing untrusted customer workloads. Operates independently from control plane application servers to prevent resource starvation.</li>
+<li><strong>System Boundary Definition:</strong></li>
+<li><strong>Inside Primary Tenant Boundary:</strong> Front-end reverse proxies (NGINX, GitLab Workhorse), SSH gateways (GitLab Shell), primary web application servers (GitLab Rails / Puma), background job queues (Sidekiq), relational databases (PostgreSQL), in-memory cache/session stores (Redis), source code storage services (Gitaly), and artifact container/package registries.</li>
+<li><strong>Outside Primary Tenant Boundary:</strong> External agency Identity Providers (IdPs using Security Assertion Markup Language [SAML] 2.0 / OpenID Connect [OIDC] / Personal Identity Verification [PIV] / Common Access Card [CAC]), customer-managed Kubernetes clusters, customer-managed pipeline execution infrastructure (GitLab Runners deployed on-premises or in customer Virtual Private Clouds [VPCs]), external Large Language Model (LLM) endpoints (when using self-hosted or third-party artificial intelligence [AI] gateways), and government compliance reporting portals (FedRAMP Marketplace / Continuous Monitoring [ConMon]).</li>
+</ul>
+<h4>1.2 Dual Administrative Layering</h4>
+<p>The platform physical architecture implements two distinct administrative operational layers to maintain separation of duties, operational safety, and audit boundaries:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Operational Layer</th>
+<th style="text-align: left;">Operator / Authority</th>
+<th style="text-align: left;">Primary Responsibilities</th>
+<th style="text-align: left;">Access Scope &amp; Account Management</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Infrastructure Management Layer</strong></td>
+<td style="text-align: left;">Managed by GitLab Site Reliability Engineers (SREs) / Dedicated Engineers (for <code>GitLab.com</code>, <code>GitLab Dedicated</code>, and <code>GitLab Dedicated for Government</code>) OR Customer Platform Operators (for <code>Self-Managed</code>).</td>
+<td style="text-align: left;">Provisioning cloud infrastructure, cloud account management (Amazon Web Services [AWS] / AWS GovCloud), underlying Virtual Machine (VM) / Operating System (OS) maintenance, network routing, storage volume scaling, database backups, disaster recovery (GitLab Geo), infrastructure-level Key Management Service (KMS) encryption keys, and system-level OS patching.</td>
+<td style="text-align: left;">Restricted strictly to infrastructure management control planes (e.g., Switchboard and Amp for Dedicated offerings), cloud provider Identity and Access Management (IAM), and hypervisors. Operators at this layer have zero application-level administrative visibility into customer source code, database rows, or project memberships.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Application Administration Layer</strong></td>
+<td style="text-align: left;">Controlled strictly by Customer Top-Level Administrators (e.g., Agency Administrators or Enterprise Platform Owners).</td>
+<td style="text-align: left;">User provisioning/deprovisioning, top-level group/project hierarchy creation, role-based access control (RBAC), security policy enforcement, branch protection rules, SAML/OIDC/PIV/CAC identity integration, credentials inventory auditing, and pipeline job token security rules.</td>
+<td style="text-align: left;">Managed exclusively via the GitLab Admin Area User Interface (UI) and Representational State Transfer (REST) / GraphQL Application Programming Interfaces (APIs). Access is granted via integrated SAML/OIDC Single Sign-On (SSO) with administrative elevation controls (e.g., Admin Mode requiring explicit re-authentication). Initial root accounts are converted to break-glass accounts post-configuration.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>2. Logical-to-Physical Component Mappings</h3>
+<h4>2.1 Control Plane Services and Service Realizations</h4>
+<p>Logical control plane capabilities map directly to physical service binaries, specific execution environments, and operational boundaries.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Logical Component</th>
+<th style="text-align: left;">Physical Realization / Binary</th>
+<th style="text-align: left;">Execution Environment / Process Details</th>
+<th style="text-align: left;">Licensing Tier Requirement</th>
+<th style="text-align: left;">Source Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>HTTP Front Door &amp; Proxy</strong></td>
+<td style="text-align: left;">NGINX + GitLab Workhorse</td>
+<td style="text-align: left;">Operates as a reverse proxy pair. NGINX terminates Transport Layer Security (TLS); Workhorse (a specialized Go binary) intercepts long-running HTTP requests, Git-over-HTTP operations, and direct object storage artifact uploads to bypass application server thread saturation.</td>
+<td style="text-align: left;">Free / Premium / Ultimate (Bundled)</td>
+<td style="text-align: left;"><em>GitLab Architecture 101 Video</em>, <em>GitLab Core Architecture Docs</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>SSH Front Door</strong></td>
+<td style="text-align: left;">GitLab Shell</td>
+<td style="text-align: left;">Go-based service handling Git-over-SSH connections. Authenticates SSH keys against the internal Rails API (<code>/api/v4/internal/allowed</code>) and proxies Git Remote Procedure Call (RPC) traffic directly to Gitaly. Operates via standard OpenSSH daemon or native Go SSHD implementation.</td>
+<td style="text-align: left;">Free / Premium / Ultimate (Bundled)</td>
+<td style="text-align: left;"><em>GitLab Architecture 101 Video</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Application Core</strong></td>
+<td style="text-align: left;">GitLab Rails / Puma</td>
+<td style="text-align: left;">Web application server executing Ruby on Rails on top of the Puma rack server. Processes business logic, UI rendering, REST/GraphQL APIs, and security authorization checks. Bounded by a 60-second request timeout; worker memory is recycled via <code>puma_worker_killer</code> upon reaching defined RAM thresholds.</td>
+<td style="text-align: left;">Free / Premium / Ultimate</td>
+<td style="text-align: left;"><em>GitLab Architecture 101 Video</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Job Queue &amp; Asynchronous Tasks</strong></td>
+<td style="text-align: left;">Sidekiq</td>
+<td style="text-align: left;">Multithreaded Ruby background processing service. Pulls asynchronous job payloads from Redis queues to process background tasks including mail delivery, repository imports, pipeline job fan-out, webhooks, and security scan ingestion.</td>
+<td style="text-align: left;">Free / Premium / Ultimate (Bundled)</td>
+<td style="text-align: left;"><em>GitLab Architecture 101 Video</em></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kubernetes Cluster Integration</strong></td>
+<td style="text-align: left;">GitLab Agent for Kubernetes (KAS)</td>
+<td style="text-align: left;">Go service providing secure, inbound-only communication from external Kubernetes clusters back to the GitLab control plane for GitOps deployments and real-time cluster monitoring.</td>
+<td style="text-align: left;">Free / Premium / Ultimate (Bundled)</td>
+<td style="text-align: left;"><em>GitLab Agent for Kubernetes Docs</em></td>
+</tr>
+</tbody>
+</table>
+<h4>2.2 Core Data Stores and Storage Persistence Architecture</h4>
+<h5>PostgreSQL (System of Record Database)</h5>
+<ul>
+<li><strong>Data Type Stored:</strong> User accounts, project/group metadata, merge request discussions, pipeline definitions, security scan findings, issue boards, and access control mappings. Database name defaults to <code>gitlabhq_production</code>.</li>
+<li><strong>Physical Service:</strong> PostgreSQL relational database instance.</li>
+<li><strong>High-Availability Configuration:</strong> Managed PostgreSQL instances (e.g., AWS Relational Database Service [RDS] / Aurora) or clustered PostgreSQL nodes. For Linux package / Omnibus self-managed deployments, connection pooling is managed via <code>pg_bouncer</code> to prevent process-forking overhead and connection exhaustion during high concurrency.</li>
+<li><strong>Deployment Constraints:</strong> Strict relational schema integrity enforced by Rails database migrations.</li>
+</ul>
+<h5>Redis (Session, Cache, and Queue Store)</h5>
+<ul>
+<li><strong>Data Type Stored:</strong> User session states, web application cache, feature flag states, rate-limiting metadata (<code>rack-attack</code>), and Sidekiq background job execution queues.</li>
+<li><strong>Physical Service:</strong> Redis in-memory key-value data structure store.</li>
+<li><strong>High-Availability Configuration:</strong> Single or multi-node Redis cluster configurations. Highly performant as data resides entirely in Random Access Memory (RAM); periodically persists snapshots to disk to withstand service restarts.</li>
+<li><strong>Deployment Constraints:</strong> Scaled primarily based on available host RAM. In enterprise high-availability deployment topologies, Redis Cache and Redis Persistent queues can be split into separate dedicated physical instances.</li>
+</ul>
+<h5>Gitaly / Git RPC Store (Bare Repository Storage)</h5>
+<ul>
+<li><strong>Data Type Stored:</strong> Bare Git repositories (source code history, branches, tags, and commit objects).</li>
+<li><strong>Physical Service:</strong> Gitaly service (a Go-based RPC service executing native Git commands on disk over gRPC).</li>
+<li><strong>Internal API Callback Loop &amp; Thread Protection:</strong> When Gitaly processes Git RPC operations, it executes an internal authorization callback to the Rails application via <code>/api/v4/internal/allowed</code> to verify user permissions. In constrained single-node deployments, this callback loop consumes an additional Puma worker thread per Git operation. To prevent thread exhaustion, Puma timeouts are enforced, and long-running Git RPCs are strictly isolated to Gitaly.</li>
+<li><strong>High-Availability Configuration:</strong></li>
+<li><strong>Self-Managed High Availability:</strong> Deploys <strong>Gitaly Cluster</strong> utilizing <strong>Praefect</strong> as a high-availability gRPC proxy and router with strong consistency logging across virtual storage nodes.</li>
+<li><strong>GitLab Dedicated &amp; Dedicated for Government:</strong> Implements a <strong>Sharded Gitaly</strong> architecture on dedicated virtual machines (<strong>without Praefect or Gitaly Cluster</strong>). Repository storage weights are managed automatically across isolated storage shards.</li>
+<li><strong>Deployment Constraints:</strong> Requires high Disk Input/Output Operations Per Second (IOPS)—recommended Solid State Drive (SSD) or Non-Volatile Memory Express (NVMe) performance (~7,000–8,000 IOPS baseline). In Cloud Native Hybrid architectures, Gitaly <strong>must remain hosted on Virtual Machines</strong> and cannot be deployed inside Kubernetes containers.</li>
+</ul>
+<h5>Object Storage / AWS S3 (Unstructured Blob Storage)</h5>
+<ul>
+<li><strong>Data Type Stored:</strong> CI/CD build artifacts, Large File Storage (LFS) objects, Container Registry images, Package Registry binaries, raw pipeline logs, and database export backups.</li>
+<li><strong>Physical Service:</strong> AWS Simple Storage Service (S3) buckets (or S3-compatible API object stores).</li>
+<li><strong>High-Availability Configuration:</strong> Native cloud-provider storage redundancy (e.g., multi-Availability Zone S3 bucket replication).</li>
+<li><strong>Deployment Constraints:</strong> GitLab Workhorse handles direct-to-S3 offloading for uploads and downloads, bypassing Puma memory allocation entirely. Encrypted at rest using Server-Side Encryption (SSE-S3) or Customer-Managed KMS keys.</li>
+</ul>
+<h4>2.3 Job Execution Plane and On-Premises Connectors</h4>
+<p>The Job Execution Plane is physically realized by the <strong>GitLab Runner</strong> binary, a lightweight, Go-based application deployed independently of the control plane.</p>
+<pre><code>+-------------------------------------------------------------------------+
+|                          CONTROL PLANE TENANT                           |
+|  [NGINX / Workhorse] &lt;---&gt; [GitLab Rails / Puma] &lt;---&gt; [Gitaly / S3]   |
++-------------------------------------------------------------------------+
+                                     ^
+                                     | (Inbound HTTPS API Polling over TLS 1.2/1.3)
+                                     v
++-------------------------------------------------------------------------+
+|                          JOB EXECUTION PLANE                            |
+|        [GitLab Runner Binary / Customer Execution Environment]          |
+|   |--&gt; Authenticates via Scoped Runner Token                            |
+|   |--&gt; Clones Repository via Short-Lived JSON Web Token (JWT)           |
+|   |--&gt; Executes Pipeline Scripts &amp; Security Scanners inside Isolation   |
+|   |--&gt; Posts Artifacts &amp; Scan Findings back to Control Plane API        |
++-------------------------------------------------------------------------+
+</code></pre>
+<ul>
+<li><strong>Runner Authentication &amp; Execution Flow:</strong><br />
+  1. Runners authenticate to the GitLab control plane using scoped <strong>Runner Authentication Tokens</strong>.<br />
+  2. The runner polls the control plane REST API over HTTPS (Port 443) for pending CI/CD jobs.<br />
+  3. Upon receiving a job payload, the runner uses a short-lived, job-scoped JSON Web Token (JWT) to clone the bare Git repository from Gitaly via Workhorse.<br />
+  4. The runner executes build steps inside designated isolation environments (e.g., Docker containers, Kubernetes pods, or shell instances).<br />
+  5. Scanners (Static Application Security Testing [SAST], Dynamic Application Security Testing [DAST], Container Scanning, Dependency Scanning) output findings and build artifacts, which the runner posts back to the Control Plane API and S3 Object Storage via Workhorse.</li>
+<li><strong>Deployment Models:</strong></li>
+<li><strong>Hosted Runners:</strong> Available natively on <code>GitLab.com</code> and offered as an optional managed add-on for commercial <code>GitLab Dedicated</code> (hosted in a separate GitLab-managed AWS account connected via AWS PrivateLink or public endpoints).</li>
+<li><strong>Customer-Managed / On-Premises Runners:</strong> Mandatory for <code>Self-Managed</code> and <code>GitLab Dedicated for Government</code>. Customers deploy, patch, and maintain runner fleets inside their own network boundaries.</li>
+</ul>
+<blockquote>
+<p>[!NOTE]<br />
+The Job Execution Plane operates as an isolated trust domain entirely separate from the Control Plane. Untrusted pipeline code is executed exclusively within the runner environment. If a runner token or runner host is compromised, the breach is isolated to that worker's execution domain and does not grant administrative access to the primary control plane, internal database, or underlying cloud infrastructure.</p>
+</blockquote>
+<hr />
+<h3>3. Deployment Offerings &amp; Physical Environment Comparison</h3>
+<h4>3.1 Multi-Tenant SaaS (GitLab.com) and Self-Managed</h4>
+<h5>Multi-Tenant SaaS (GitLab.com)</h5>
+<p><code>GitLab.com</code> is hosted on commercial AWS multi-tenant infrastructure managed entirely by GitLab. All customers share the underlying control plane application stack, with logical data isolation enforced at the application tier via database scoping and namespace pathing. Shared runner fleets process jobs across multi-tenant worker pools. It is unsuitable for workloads requiring single-tenant physical isolation, custom cloud encryption keys, or FedRAMP Moderate compliance.</p>
+<h5>Self-Managed</h5>
+<p>Self-Managed instances are deployed by the customer onto customer-authorized cloud infrastructure (AWS, Google Cloud Platform [GCP], Microsoft Azure) or physical on-premises data centers using the Linux Package (Omnibus) or Kubernetes Helm charts.<br />
+* <strong>Cloud Native Hybrid Architecture Rule:</strong> For high-availability enterprise scale, GitLab mandates a hybrid deployment topology: stateless application components (GitLab Rails/Puma, Sidekiq, Workhorse) run inside a Kubernetes cluster, while stateful data stores—specifically <strong>Gitaly</strong>—<strong>must be hosted on dedicated Virtual Machines</strong> or bare-metal OS installs. Gitaly High Availability (via Praefect) is not supported running natively inside Kubernetes containers.</p>
+<h4>3.2 Single-Tenant Managed Infrastructure (GitLab Dedicated)</h4>
+<p><code>GitLab Dedicated</code> is a fully managed, single-tenant SaaS offering hosted on commercial AWS infrastructure.</p>
+<pre><code>+-------------------------------------------------------------------+
+|                  GitLab Management Domain                         |
+|  [Switchboard API] &lt;---&gt; [Amp Orchestration Engine]               |
++-------------------------------------------------------------------+
+                                 | (Provisions &amp; Operates)
+                                 v
++-------------------------------------------------------------------+
+|               Isolated Customer AWS Cloud Account                 |
+|  +-------------------------------------------------------------+  |
+|  | Single Customer Virtual Private Cloud (VPC)                 |  |
+|  |  [Puma / Sidekiq] &lt;---&gt; [Sharded Gitaly VMs]               |  |
+|  |  [PostgreSQL]     &lt;---&gt; [Redis] &lt;---&gt; [AWS S3 Buckets]    |  |
+|  +-------------------------------------------------------------+  |
+|            ^                                    ^                 |
+|            | (AWS PrivateLink)                  |                 |
++------------|------------------------------------|-----------------+
+             |                                    |
++--------------------------+       +--------------------------------+
+| Customer Corporate VPC   |       | GitLab-Managed AWS Account     |
+| [Self-Managed Runners]   |       | [Optional Hosted Runners]      |
++--------------------------+       +--------------------------------+
+</code></pre>
+<ul>
+<li><strong>Tenant Isolation:</strong> Every customer receives a completely dedicated, isolated AWS account and VPC with unique resource quotas and zero co-mingling of data or computing resources with other tenants.</li>
+<li><strong>Control Plane Orchestration:</strong> Automated provisioning, configuration, zero-downtime maintenance, and platform upgrades are driven by GitLab’s internal operational management platforms: <strong>Switchboard</strong> (global tenant configuration management) and <strong>Amp</strong> (tenant-level role, policy, and infrastructure provisioning engine).</li>
+<li><strong>Storage Topology:</strong> Implements a <strong>Sharded Gitaly</strong> setup across dedicated virtual machines (<strong>not</strong> Gitaly Cluster with Praefect), avoiding Praefect cluster complexity while maintaining storage isolation. Disaster recovery is provided via a GitLab <strong>Geo</strong> secondary site in an active-passive configuration.</li>
+<li><strong>Connectivity &amp; Execution:</strong> Supports optional inbound and outbound <strong>AWS PrivateLink</strong> connections for private networking to customer enterprise VPCs. Pipeline execution can use optional GitLab-hosted runners in an isolated AWS account or customer-managed runners.</li>
+</ul>
+<h4>3.3 Federal / Public Sector Managed Infrastructure (GitLab Dedicated for Government)</h4>
+<p><code>GitLab Dedicated for Government</code> is an isolated, federal-grade single-tenant managed SaaS built specifically for U.S. government agencies and defense contractors.</p>
+<ul>
+<li><strong>Infrastructure &amp; Region:</strong> Deployed exclusively inside <strong>AWS GovCloud (US-West)</strong>. Physical and logical access is restricted strictly to U.S. citizens acting as GitLab Dedicated SRE operations personnel.</li>
+<li><strong>Tenant Isolation &amp; ATO:</strong> Operates under a <strong>FedRAMP Moderate Authority to Operate (ATO)</strong> (FedRAMP Marketplace ID: <code>FR2411959145</code>, sponsored by the General Services Administration [GSA]). Requires the <strong>Ultimate</strong> licensing tier. Each customer environment is isolated within its own dedicated AWS GovCloud account.</li>
+<li><strong>Runner Boundary:</strong> GitLab <strong>does not provide hosted runners</strong> within the <code>Dedicated for Government</code> tenant boundary. Customers <strong>must deploy and manage their own self-managed runners</strong> outside the tenant boundary within their own agency network or VPC. Runners must be built using official <strong>Federal Information Processing Standards (FIPS)-compliant container images</strong> published by GitLab.</li>
+<li><strong>Identity &amp; Authentication:</strong> Direct local password login is restricted for standard users. Authentications must route through an integrated agency Identity Provider (IdP) via SAML 2.0 / OIDC, enabling mandatory <strong>PIV/CAC smart card authentication</strong> and hardware-based Multi-Factor Authentication (MFA).</li>
+</ul>
+<blockquote>
+<p>[!NOTE]<br />
+<strong>CSP ATO Scope vs. Agency ATO Responsibility:</strong><br />
+A FedRAMP Moderate Cloud Service Provider (CSP) authorization at the platform level (<code>FR2411959145</code>) covers only the infrastructure and control plane services within the GitLab-operated AWS GovCloud tenant boundary. Because customer-managed FIPS runners and agency Identity Providers operate <em>outside</em> the CSP tenant boundary, agency platform security teams must issue an Agency-Specific ATO accepting residual risks across the complete hybrid integration boundary.</p>
+</blockquote>
+<h4>3.4 Cross-Offering Physical Architecture Matrix</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Offering</th>
+<th style="text-align: left;">Infrastructure Operator</th>
+<th style="text-align: left;">Host Cloud / Region</th>
+<th style="text-align: left;">Data Residency</th>
+<th style="text-align: left;">Git Storage Topology</th>
+<th style="text-align: left;">Runner Execution Location</th>
+<th style="text-align: left;">Impact Level / Security ATO</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Multi-Tenant SaaS (<code>GitLab.com</code>)</strong></td>
+<td style="text-align: left;">GitLab</td>
+<td style="text-align: left;">Commercial AWS Multi-Tenant</td>
+<td style="text-align: left;">Shared Commercial AWS Storage</td>
+<td style="text-align: left;">Multi-Tenant Gitaly Shards</td>
+<td style="text-align: left;">Shared SaaS Runners or Customer-Managed</td>
+<td style="text-align: left;">Commercial SOC 2 Type II / ISO 27001 (Not FedRAMP Moderate)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Self-Managed</strong></td>
+<td style="text-align: left;">Customer Platform Team</td>
+<td style="text-align: left;">Customer-Selected (Cloud or On-Premises)</td>
+<td style="text-align: left;">Customer Data Center / Customer Account</td>
+<td style="text-align: left;">Gitaly / Gitaly Cluster (Praefect HA)</td>
+<td style="text-align: left;">Customer-Managed Infrastructure</td>
+<td style="text-align: left;">Customer Agency ATO (Path for DoD IL5 / Air-Gapped)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Single-Tenant Managed SaaS (<code>GitLab Dedicated</code>)</strong></td>
+<td style="text-align: left;">GitLab (Switchboard &amp; Amp)</td>
+<td style="text-align: left;">Commercial AWS (Isolated Customer Account)</td>
+<td style="text-align: left;">Customer-Dedicated AWS Cloud Account</td>
+<td style="text-align: left;">Sharded Gitaly (Dedicated VMs, No Praefect)</td>
+<td style="text-align: left;">Optional GitLab-Hosted Runners or Customer-Managed</td>
+<td style="text-align: left;">Commercial SOC 2 Type II / ISO 27001</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Managed Government SaaS (<code>Dedicated for Government</code>)</strong></td>
+<td style="text-align: left;">GitLab (U.S. Citizen SRE Personnel)</td>
+<td style="text-align: left;">AWS GovCloud US-West (Isolated Account)</td>
+<td style="text-align: left;">Dedicated AWS GovCloud US-West Account</td>
+<td style="text-align: left;">Sharded Gitaly (Dedicated VMs, No Praefect)</td>
+<td style="text-align: left;"><strong>Customer Self-Managed Outside Tenant Boundary (FIPS)</strong></td>
+<td style="text-align: left;"><strong>FedRAMP Moderate ATO (ID: FR2411959145)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>4. Government &amp; Security Cloud Impact Levels (GCC, GCC High, DoD, Secret)</h3>
+<h4>4.1 FedRAMP Moderate &amp; AWS GovCloud Baseline</h4>
+<p><code>GitLab Dedicated for Government</code> establishes its physical security baseline on AWS GovCloud US-West under a FedRAMP Moderate ATO. Cryptographic integrity is maintained via FIPS 140-2 / 140-3 validated cryptographic modules across data-at-rest encryption (AWS KMS using customer-supplied keys or AWS-managed keys) and data-in-transit TLS pipelines. System access follows National Institute of Standards and Technology (NIST) Special Publication (SP) 800-53 Rev. 5 controls, enforcing agency IdP routing for CAC/PIV credentialing, inactive session lockouts, and strict administrative session elevation.</p>
+<h4>4.2 Impact Level Analysis &amp; Explicit Cloud Silence Notes</h4>
+<p>Federal authorizations are specific to defined infrastructure environments and operational boundaries. The table below details platform availability across federal impact levels and highlights explicit documentation gap mappings:</p>
+<h5>Government Cloud / Impact Level Availability &amp; Silence Mapping</h5>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Cloud / Impact Level Target</th>
+<th style="text-align: left;">Offering Availability Status</th>
+<th style="text-align: left;">Physical Deployment Path</th>
+<th style="text-align: left;">Silence / Gap Analysis Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>FedRAMP Moderate (Civilian / CUI)</strong></td>
+<td style="text-align: left;"><strong>Available</strong></td>
+<td style="text-align: left;"><code>GitLab Dedicated for Government</code></td>
+<td style="text-align: left;">Fully authorized under FedRAMP Marketplace ID <code>FR2411959145</code> (AWS GovCloud US-West baseline).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Microsoft GCC / GCC High</strong></td>
+<td style="text-align: left;"><strong>Not Applicable as Managed SaaS</strong></td>
+<td style="text-align: left;"><code>Self-Managed</code> (Deployed in Azure Government)</td>
+<td style="text-align: left;">GitLab Dedicated is engineered natively on AWS GovCloud, not Azure Government. Azure-hosted federal workloads require customer-deployed <code>Self-Managed</code> instances.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DoD Impact Level 4 / 5 (IL4 / IL5)</strong></td>
+<td style="text-align: left;"><strong>Unavailable as Managed SaaS</strong></td>
+<td style="text-align: left;"><code>Self-Managed</code></td>
+<td style="text-align: left;"><code>GitLab Dedicated for Government</code> is <strong>strictly FedRAMP Moderate today</strong>. Department of Defense (DoD) IL5 Controlled Unclassified Information (CUI) environments require customer-deployed <code>Self-Managed</code> instances on IL5-authorized cloud infrastructure.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>DoD Impact Level 6 (IL6 / Secret / Top Secret)</strong></td>
+<td style="text-align: left;"><strong>Unavailable as Managed SaaS</strong></td>
+<td style="text-align: left;"><code>Self-Managed</code></td>
+<td style="text-align: left;">Managed SaaS offerings do not exist in classified cloud enclaves. Customers must deploy <code>Self-Managed</code> binaries via Omnibus Linux packages or Helm charts into air-gapped classified cloud networks.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Air-Gapped / Disconnected Networks</strong></td>
+<td style="text-align: left;"><strong>Unavailable as Managed SaaS</strong></td>
+<td style="text-align: left;"><code>Self-Managed</code> (Offline License)</td>
+<td style="text-align: left;">Managed SaaS offerings require continuous monitoring (ConMon) connected to FedRAMP/GSA endpoints. Air-gapped environments require <code>Self-Managed</code> deployments with offline license activation keys.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>5. Integration Surface, Hybrid Networking, &amp; AI Physical Data Paths</h3>
+<h4>5.1 Hybrid Networking, Identity, and On-Premises Connectors</h4>
+<p>External software systems, developers, and build infrastructure integrate with the platform control plane through defined network protocols and authentication standards:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Integration / Connector</th>
+<th style="text-align: left;">Directionality</th>
+<th style="text-align: left;">Protocol / Mechanism</th>
+<th style="text-align: left;">Authentication Model</th>
+<th style="text-align: left;">Government Cloud Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Agency Identity Provider (IdP)</strong></td>
+<td style="text-align: left;">Inbound</td>
+<td style="text-align: left;">SAML 2.0 / OIDC over HTTPS</td>
+<td style="text-align: left;">Single Sign-On (SSO) / PIV/CAC Smart Cards</td>
+<td style="text-align: left;">Mandatory for <code>Dedicated for Government</code>. PIV/CAC smart card authentication is processed through the agency IdP, not a native GitLab PIV stack.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>AWS PrivateLink</strong></td>
+<td style="text-align: left;">Bi-directional</td>
+<td style="text-align: left;">AWS PrivateLink VPC Endpoints</td>
+<td style="text-align: left;">AWS IAM / Private IP Routing</td>
+<td style="text-align: left;">Fully supported on <code>GitLab Dedicated</code>. Enables secure private routing between agency corporate VPCs and the tenant VPC without internet exposure.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>GitLab Runner</strong></td>
+<td style="text-align: left;">Bi-directional</td>
+<td style="text-align: left;">HTTPS REST API Polling (Port 443)</td>
+<td style="text-align: left;">Scoped Runner Authentication Tokens (JWT)</td>
+<td style="text-align: left;"><code>Dedicated for Government</code> requires customer-hosted FIPS runners deployed <strong>outside</strong> the FedRAMP tenant boundary.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kubernetes Agent (KAS)</strong></td>
+<td style="text-align: left;">Bi-directional</td>
+<td style="text-align: left;">gRPC over HTTPS (Inbound connection from cluster)</td>
+<td style="text-align: left;">Agent Secret Tokens</td>
+<td style="text-align: left;">Connects customer Kubernetes clusters back to GitLab. Documentation is silent regarding KAS Provisional Authorization (PA) status on <code>Dedicated for Government</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>External Webhooks (Slack/Teams)</strong></td>
+<td style="text-align: left;">Outbound</td>
+<td style="text-align: left;">HTTPS Webhook Callbacks</td>
+<td style="text-align: left;">Webhook Secret Tokens</td>
+<td style="text-align: left;"><strong>Documentation Silence:</strong> Official documentation does not confirm whether third-party notification webhooks (e.g., Slack / Microsoft Teams) fall within the FedRAMP Moderate boundary.</td>
+</tr>
+</tbody>
+</table>
+<h4>5.2 AI Gateway Physical Deployment and Data Pathing</h4>
+<p>GitLab Duo generative AI features are physically instantiated through two distinct deployment topologies:</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+| PATH 1: GITLAB-MANAGED AI GATEWAY (Commercial SaaS &amp; Default Self-Managed)        |
+|                                                                                   |
+| [GitLab Control Plane] ---&gt; [GitLab.com AI Gateway] ---&gt; [Commercial Vendor LLMs] |
+|                                                           (Claude, Gemini, etc.)  |
++-----------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------+
+| PATH 2: SELF-HOSTED AI GATEWAY (Self-Managed &amp; Dedicated for Government Path)     |
+|                                                                                   |
+| [GitLab Control Plane] ---&gt; [Customer-Hosted AI Gateway] ---&gt; [Local/Gov Cloud LLMs]|
+|                                                               (vLLM, Bedrock Gov) |
++-----------------------------------------------------------------------------------+
+</code></pre>
+<h5>Path 1: GitLab-Managed AI Gateway (Commercial SaaS &amp; Default Self-Managed)</h5>
+<ul>
+<li><strong>Data Flow:</strong> Telemetry, prompt context (source code snippets, diffs, issue descriptions), and user inputs flow from the GitLab instance to the multi-tenant <code>GitLab.com AI Gateway</code>.</li>
+<li><strong>Model Processing:</strong> The GitLab-managed gateway routes inference requests to third-party commercial LLM vendor endpoints (such as Anthropic Claude, Google Gemini, Fireworks/Mistral, and OpenAI).</li>
+<li><strong>Boundaries &amp; Data Protection:</strong> Data is encrypted in transit via TLS. Vendor agreements enforce zero-data-retention for prompts and completions. However, data egresses the primary customer tenant boundary to commercial vendor clouds.</li>
+</ul>
+<h5>Path 2: Self-Hosted AI Gateway (Self-Managed &amp; Dedicated for Government Path)</h5>
+<ul>
+<li><strong>Data Flow:</strong> Prompts and code context remain entirely within customer-controlled infrastructure or agency security boundaries.</li>
+<li><strong>Model Processing:</strong> The customer hosts the <strong>GitLab AI Gateway binary</strong> within their private network and routes inference calls directly to customer-operated, in-boundary model runtimes (e.g., local <code>vLLM</code> instances, AWS Bedrock GovCloud endpoints, or Azure Government OpenAI instances).</li>
+<li><strong>Compliance Control:</strong> Eliminates prompt and code data egress to external commercial SaaS endpoints, maintaining full data sovereignty for regulated public sector and air-gapped environments.</li>
+</ul>
+<blockquote>
+<p>[!WARNING]<br />
+<strong>Unauthorized AI Capabilities in Government Environments:</strong><br />
+While basic code suggestions and chat features via a Self-Hosted AI Gateway are supported, <strong>GitLab Duo Agent Platform flows and external agentic AI capabilities are explicitly NOT AUTHORIZED</strong> for use on <code>GitLab Dedicated for Government</code> under its current FedRAMP Moderate baseline.</p>
+</blockquote>
+<hr />
+<h3>6. Physical Architecture Gap Register &amp; Technical Silence Notes</h3>
+<h4>6.1 Architecture Silence &amp; Unknowns Register</h4>
+<p>Where technical documentation lacks explicit verification, architectural parameters are cataloged in accordance with strict factual grounding rules:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Architecture Area / Feature</th>
+<th style="text-align: left;">Documented Status / Claim</th>
+<th style="text-align: left;">Explicit Gap / Silence Note</th>
+<th style="text-align: left;">Impact on Physical Design</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Hosted FIPS Runners for Government</strong></td>
+<td style="text-align: left;">Listed as a roadmap target in product handbooks.</td>
+<td style="text-align: left;"><strong>UNKNOWN</strong> — Documentation confirms current government deployments require self-managed runners outside the tenant, but lacks an official release date for hosted FIPS runners within the tenant boundary.</td>
+<td style="text-align: left;">Customer architects must budget, deploy, and maintain external runner infrastructure (EC2/EKS in customer AWS accounts).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Slack / Teams Integration ATO Boundary</strong></td>
+<td style="text-align: left;">Webhook notifications supported by the Rails application.</td>
+<td style="text-align: left;"><strong>UNKNOWN</strong> — Documentation is silent on whether egressing payload data to external Slack/Teams webhooks invalidates or breaches the FedRAMP Moderate boundary.</td>
+<td style="text-align: left;">Security architects must treat webhooks as untrusted egress points until cleared by the agency Authorizing Official (AO).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kubernetes Agent (KAS) FedRAMP PA</strong></td>
+<td style="text-align: left;">Binary bundled with the GitLab control plane stack.</td>
+<td style="text-align: left;"><strong>UNKNOWN</strong> — Explicit documentation gap regarding whether KAS endpoints are fully included within the FedRAMP Moderate Provisional Authorization (PA) boundary.</td>
+<td style="text-align: left;">Agencies conducting GitOps deployments via KAS must verify cluster agent endpoint authorization with the GitLab Dedicated SecOps team.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Hosted Model Fallback Restrictions</strong></td>
+<td style="text-align: left;">Self-Hosted AI Gateway configuration option.</td>
+<td style="text-align: left;">Official documentation confirms offline licenses block GitLab-managed model fallbacks, but lacks explicit runtime verification details for partially connected networks.</td>
+<td style="text-align: left;">Egress firewall rules must explicitly block outgoing connection paths to <code>cloud.gitlab.com</code> to prevent unintentional prompt leakage.</td>
+</tr>
+</tbody>
+</table>
+</article>
+</body>
+</html>

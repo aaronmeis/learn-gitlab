@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comprehensive Failure Mode and Security Weakness Catalog: GitLab DevSecOps Platform Architecture</title>
+<link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/theme.css">
+<link rel="stylesheet" href="library.css">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('learn_gitlab_theme') || 'light';
+    if (t !== 'dark') t = 'light';
+    document.documentElement.dataset.theme = t;
+  } catch (e) { document.documentElement.dataset.theme = 'light'; }
+})();
+</script>
+</head>
+<body class="lib-doc">
+<article class="prose">
+<h1>Comprehensive Failure Mode and Security Weakness Catalog: GitLab DevSecOps Platform Architecture</h1>
+<hr />
+<h3>1. Architectural Scope and Assessment Framework</h3>
+<h4>1. System Boundary and Trust Domain Definition</h4>
+<p>The platform boundary separates centralized application management and state management services from distributed job execution environments. To establish formal audit boundaries and enforce least-privilege security controls, the architecture is partitioned into two non-overlapping trust domains:</p>
+<ul>
+<li><strong>Control Plane Trust Domain</strong>: Contains core application services responsible for identity handling, state management, source code persistence, API orchestration, and job scheduling. Components operating strictly within this domain include NGINX (TLS termination/reverse proxy), GitLab Workhorse (smart reverse proxy for large payloads), Rails/Puma (application web server and API layer), Sidekiq (asynchronous background job processor), PostgreSQL (system-of-record relational database), Redis (session state, cache, and background job queue stores), and Gitaly (Git RPC storage service).</li>
+<li><strong>Job Plane Trust Domain</strong>: Contains distributed execution environments (GitLab Runner instances) that poll the control plane over HTTPS, retrieve job execution instructions, clone target repositories, execute arbitrary user-defined build scripts, run security scanners, and return pipeline logs and binary artifacts.</li>
+</ul>
+<p>Neighbor systems sitting immediately outside the control plane boundary comprise six key external entities:<br />
+1.  <strong>Agency / Enterprise Identity Provider (IdP)</strong>: External SAML 2.0 / OpenID Connect (OIDC) identity federations enforcing PIV/CAC smart card authentication and organizational multi-factor authentication (MFA).<br />
+2.  <strong>Kubernetes Clusters via KAS</strong>: Customer-managed runtime infrastructure connected inbound to the control plane via the GitLab Agent for Kubernetes (KAS).<br />
+3.  <strong>External / Customer VPCs via AWS PrivateLink</strong>: Customer cloud networks interconnected via unidirectional or bidirectional AWS PrivateLink endpoints.<br />
+4.  <strong>External LLM Vendor Endpoints</strong>: Third-party artificial intelligence providers (e.g., Anthropic, Google, OpenAI) accessed via the managed AI Gateway path.<br />
+5.  <strong>Self-Managed Runner Fleets</strong>: Customer-operated worker fleets (e.g., FIPS-compliant runner images) hosted on customer infrastructure entirely outside the control plane AWS account boundary.<br />
+6.  <strong>FedRAMP Continuous Monitoring (ConMon) / GSA Oversight Reporting Endpoints</strong>: Federal governance endpoints receiving continuous monitoring data under FedRAMP Moderate package ID FR2411959145.</p>
+<p><strong>Key Taxonomy Definitions:</strong><br />
+*   <strong>Control Plane Trust Domain</strong>: The administrative and stateful security boundary containing core database, caching, web, and storage components; managed by platform operations staff or Cloud Service Provider (CSP) Site Reliability Engineers (SREs).<br />
+*   <strong>Job Plane Trust Domain</strong>: The untrusted execution boundary where user-submitted pipeline code, third-party build tools, and arbitrary script steps are processed on ephemeral or persistent worker nodes.</p>
+<h4>2. Architectural Views &amp; Assessment Methodology</h4>
+<p>This catalog evaluates the platform across four explicit architecture views:</p>
+<ol>
+<li><strong>Conceptual View</strong>: Evaluates high-level capabilities, operational actors, compliance boundaries, and governance constraints without referencing specific product implementations or cloud SKUs.</li>
+<li><strong>Logical View</strong>: Analyzes vendor-neutral component relationships, data entity models, worker execution flows, interface contracts, middleware layers, and synchronous versus asynchronous processing queues.</li>
+<li><strong>Physical View</strong>: Assesses concrete infrastructure realizations, tenant isolation boundaries, cloud provider variants (GitLab.com, Self-Managed, Dedicated, Dedicated for Government), storage sub-system IOPS requirements, and licensing/impact-level constraints.</li>
+<li><strong>Integration &amp; AI View</strong>: Evaluates third-party system integration boundaries, identity handoffs, NIST controls, API contracts, and artificial intelligence data paths (Managed vs. Self-Hosted AI Gateway architectures).</li>
+</ol>
+<p><strong>Methodology Constraint &amp; Silence Rule:</strong><br />
+All architectural evaluations, failure modes, and security weaknesses cataloged herein are grounded strictly in verified source documentation. Any technical capability, cloud availability parameter, or security control not explicitly validated by the underlying source context is formally designated as <strong>SILENCE</strong>. No external assumptions, unverified marketing assertions, or unbacked capabilities are inferred.</p>
+<hr />
+<h3>2. Conceptual View Failure Modes and Governance Weaknesses</h3>
+<h4>1. Compliance Boundaries &amp; ATO Misinterpretation</h4>
+<blockquote>
+<p><strong>Failure Mode: Compliance Boundaries &amp; ATO Misinterpretation</strong></p>
+<ul>
+<li><strong>Symptom</strong>: Deployment of sensitive or regulated federal workloads—such as Controlled Unclassified Information (CUI) or Department of Defense (DoD) Impact Level 5 (IL5) / Impact Level 6 (IL6) data—onto unauthorized commercial SaaS or single-tenant offerings (e.g., multi-tenant GitLab.com or commercial GitLab Dedicated) under the invalid assumption that a provider's cloud certification grants blanket organizational authorization.</li>
+<li><strong>Root Cause</strong>: Failure to adhere to the Cloud Shared Responsibility Model, resulting in agency personnel conflating a Cloud Service Provider's (CSP) FedRAMP Marketplace listing (e.g., FedRAMP Moderate Authorization FR2411959145 on AWS GovCloud US-West) with an official agency-level risk acceptance decision.</li>
+<li><strong>View</strong>: Conceptual.</li>
+<li><strong>Blast Radius</strong>: Total regulatory non-compliance, severe spillage of unclassified or classified defense data across unapproved commercial tenant boundaries, immediate suspension or revocation of system authorization, and potential compromise of software supply chain integrity.</li>
+<li><strong>Supported Mitigation</strong>: Mandate that the agency Authorizing Official (AO) issue an explicit, signed System Security Plan (SSP) approval and Authorization Letter specifically naming the selected deployment offering (e.g., Dedicated for Government), the exact tenant impact level, data classification boundaries, and customer-operated controls (such as off-tenant FIPS runners).</li>
+</ul>
+</blockquote>
+<h4>2. Control Plane vs. Job Plane Trust Boundary Conflation</h4>
+<blockquote>
+<p><strong>Failure Mode: Control Plane vs. Job Plane Trust Boundary Conflation</strong></p>
+<ul>
+<li><strong>Symptom</strong>: Execution of arbitrary, untrusted user pipeline scripts within or directly adjacent to administrative control plane networks, exposing management infrastructure and persistent stores to unvetted build execution payloads.</li>
+<li><strong>Root Cause</strong>: Conceptual architecture error that treats pipeline job execution environments as trusted internal extensions of the control plane rather than strictly isolated, untrusted processing domains.</li>
+<li><strong>View</strong>: Conceptual.</li>
+<li><strong>Blast Radius</strong>: Unrestricted lateral movement from a compromised build host into control plane infrastructure, core PostgreSQL relational databases, Redis session/queue stores, or underlying cloud tenant management systems (e.g., Switchboard/Amp).</li>
+<li><strong>Supported Mitigation</strong>: Enforce absolute architectural separation by provisioning job execution runners on isolated infrastructure completely outside the control plane tenant boundary (e.g., deploying customer-managed FIPS-compliant runners within agency-operated AWS VPCs outside the Dedicated for Government AWS GovCloud account).</li>
+</ul>
+</blockquote>
+<hr />
+<h3>3. Logical View Failure Modes and Component Bottlenecks</h3>
+<h4>1. Runner Token Theft and Impersonation</h4>
+<p>Compromised or broadly scoped runner authentication tokens allow unauthorized entities to register rogue worker nodes, poll internal job queues, read repository source code, and exfiltrate secrets.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Attribute</th>
+<th style="text-align: left;">Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Weakness / Failure Mode</strong></td>
+<td style="text-align: left;">Runner Token Theft and Impersonation</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Architectural View</strong></td>
+<td style="text-align: left;">Logical</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Symptom</strong></td>
+<td style="text-align: left;">Rogue or unregistered worker instances connect to the application control plane, poll job queues, exfiltrate environment credentials and source code, or inject malicious build artifacts into pipelines.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Root Cause</strong></td>
+<td style="text-align: left;">Usage of unrotated, broadly scoped (instance-level or group-level) runner registration/authentication tokens stored insecurely in code repositories, unencrypted configuration files, or exposed job logs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Blast Radius</strong></td>
+<td style="text-align: left;">Total compromise of pipeline execution integrity, exfiltration of production environment secrets, exposure of proprietary source code, and supply chain poisoning across projects sharing the runner scope.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Supported Mitigation</strong></td>
+<td style="text-align: left;">Implement fine-grained token scoping, enforce periodic automated token rotation, apply zero-trust network access controls to job polling endpoints, and enforce isolated runner execution flows.</td>
+</tr>
+</tbody>
+</table>
+<h4>2. Puma Worker Exhaustion &amp; Ungraceful Termination</h4>
+<p>Puma serves dynamic HTTP/REST/GraphQL requests for the core Ruby on Rails application stack. Web and API traffic traverses a Rack middleware stack (<code>Rack::Attack</code>, <code>Rack::Timeout</code>, <code>OmniAuth</code>) prior to reaching Rails controllers.</p>
+<pre><code>Incoming Request ---&gt; [ NGINX / Workhorse ]
+                            |
+                            v
+                    [ Puma Web Server ]
+                            |
+                            v
+                   [ Rack Middleware Stack ]
+                   ├── Rack::Attack  (Rate limiting / Throttling)
+                   ├── Rack::Timeout (Hard request execution ceiling)
+                   └── OmniAuth      (Authentication callbacks)
+                            |
+                            v (Only unrejected requests reach Rails)
+                   [ Rails Application Controllers ]
+</code></pre>
+<ul>
+<li><strong>Rack Middleware Execution and Logging Gaps</strong>: <code>Rack::Attack</code> enforces IP and user rate limiting, while <code>Rack::Timeout</code> enforces request duration limits. If <code>Rack::Attack</code> drops a request due to throttling or <code>Rack::Timeout</code> aborts execution, request processing halts within the middleware layer <em>before</em> reaching Rails. Consequently, these rejected requests <strong>do not log to <code>production.json</code></strong>, though traces appear in NGINX and Workhorse reverse proxy logs.</li>
+<li><strong>Memory Dynamics &amp; <code>puma_worker_killer</code></strong>: Dynamic memory allocations during Rails request execution often exceed Ruby garbage collection (GC) rates under heavy traffic. To prevent complete host RAM exhaustion, the <code>puma_worker_killer</code> utility monitors worker process memory and forcibly terminates workers exceeding threshold limits. While recycling every 20–30 seconds under heavy load is normal baseline behavior, worker recycling every 5–6 seconds indicates acute RAM starvation per worker.</li>
+<li><strong>Puma Thread Configuration Bounds</strong>: Configuring Puma threads per worker beyond <strong>14 to 15 threads</strong> (e.g., setting threads to 16) causes severe process creation and destruction delays during worker recycling, leading to Puma startup timeouts and worker initialization failures.</li>
+<li><strong>Resource Thresholds &amp; Scaling Triggers</strong>: Puma request handling is bounded by hard 60-second timeouts across Workhorse, NGINX, and Puma. Web or API requests exceeding 60 seconds are terminated, returning HTTP 502 Bad Gateway or HTTP 500 Internal Server Error responses. Extreme request volumes can also exhaust OS file descriptors due to dynamic Rails template compilation, stalling web traffic processing.</li>
+</ul>
+<h4>3. Sidekiq / Redis Queue Bottlenecks</h4>
+<p>Sidekiq processes asynchronous background jobs (e.g., pipeline job fan-outs, email notifications, project imports, and security scan ingestion). Puma enqueues tasks by writing worker classes and arguments into Redis in-memory lists.</p>
+<pre><code>[ Puma App ] ---&gt; (Enqueue Job Payload) ---&gt; [ Shared Redis Instance ]
+                                                    │
+        ┌───────────────────────────────────────────┴───────────────────────────────────────────┐
+        ▼                                                                                       ▼
+[ Memory Eviction Policy: volatile-lru ]                                        [ In-Memory Job Queues: Redis Lists ]
+  • Drops ephemeral cache entries under RAM pressure                              • Unpersisted job arguments &amp; payloads
+  • High risk of list corruption or dropped payloads during restarts              • Susceptible to queue backlogs under fan-out
+        │                                                                                       │
+        └───────────────────────────────────────────┬───────────────────────────────────────────┘
+                                                    ▼
+                                    [ Sidekiq Background Workers ]
+</code></pre>
+<p>When a single Redis instance is shared between ephemeral session caching/memoization and persistent Sidekiq job queues, memory pressure introduces severe operational failure modes:<br />
+*   <strong>Queue Loss &amp; Memory Eviction Mechanics</strong>: Ephemeral caching typically utilizes LRU eviction policies (e.g., <code>volatile-lru</code>). If a single Redis instance handles both caching and Sidekiq queues, memory saturation or host reboots can cause the loss of unpersisted job payloads stored in Redis lists.<br />
+*   <strong>Operational Impact</strong>: Shared Redis saturation results in growing background job backlogs, stalled Merge Request status updates, delayed security scan ingestion, and platform-wide latency.<br />
+*   <strong>Mitigation</strong>: Architecturally isolate ephemeral caching from persistent background queues by provisioning separate physical or logical Redis instances (<strong>Redis Cache</strong> vs. <strong>Redis Persistent</strong>), scaling RAM, and binding dedicated Sidekiq worker processes to isolated high-priority queues.</p>
+<hr />
+<h3>4. Physical View Failure Modes, Deployment Misconfigurations, and Licensing Gaps</h3>
+<h4>1. Gitaly Disk IOPS Exhaustion and Storage Architecture Misconfigurations</h4>
+<p>Gitaly manages Git repository access via gRPC RPCs. Git operations issue high volumes of small read/write filesystem transactions, making storage IOPS the primary performance bottleneck.</p>
+<ul>
+<li><strong>Symptom</strong>: High Git RPC latency, <code>507 Insufficient Storage</code> errors, <code>14 Deadline Exceeded</code> gRPC timeouts in Puma (where default Gitaly RPC timeouts are set to 57 seconds, representing 95% of Puma's 60-second limit), and repository write failures.</li>
+<li><strong>Post-Timeout Backend Execution Mechanics</strong>: When Puma times out at 60 seconds or Gitaly breaches its 57-second RPC deadline, Gitaly on the storage server <strong>may continue executing the underlying <code>git</code> process on disk in the background</strong> unless gRPC deadline propagation actively terminates the child process. This causes Gitaly nodes to remain at 100% CPU and IOPS utilization long after end users receive HTTP 502/504 gateway errors.</li>
+<li><strong>[ROOT CAUSE: LOW-IOPS STORAGE]</strong>: Deploying Gitaly storage on low-tier disk architectures (e.g., mechanical spinning disks or cloud storage tiers delivering under 7000–8000 IOPS, such as 700–800 IOPS tiers).</li>
+<li><strong>[ROOT CAUSE: KUBERNETES GITALY DEPLOYMENT]</strong>: Deploying Gitaly High Availability (HA) inside Kubernetes containers within Cloud Native Hybrid setups, violating explicit architectural requirements mandating that Gitaly HA remain on dedicated Virtual Machines (VMs).</li>
+<li><strong>[ROOT CAUSE: PRAEFECT SPLIT-BRAIN &amp; OFFERING MISMATCH]</strong>: Configuring Praefect (Gitaly Cluster) inside single-tenant Dedicated environments (which strictly utilize <strong>sharded Gitaly</strong>, not Praefect), or encountering Praefect quorum loss and split-brain states in misconfigured Self-Managed environments.</li>
+<li><strong>Blast Radius</strong>: Total repository read/write outages, stalled CI/CD cloning steps, dropped user sessions, and potential Git object corruption.</li>
+<li><strong>Supported Mitigation</strong>: Provision high-performance SSD storage delivering a minimum of 7000–8000 IOPS, maintain Gitaly on dedicated VMs in Cloud Native Hybrid deployments, and enforce sharded Gitaly architecture for Dedicated single-tenant environments.</li>
+</ul>
+<h4>2. Offering Mismatch &amp; Impact Level Licensing Gaps</h4>
+<p>Deploying an incompatible platform offering or license SKU can lead to compliance failures, missing capability controls, or accreditation rejection during agency review.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Offering</th>
+<th style="text-align: left;">Operator</th>
+<th style="text-align: left;">Infrastructure Cloud</th>
+<th style="text-align: left;">Impact Level Target</th>
+<th style="text-align: left;">Architecture Limits / Gaps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>GitLab.com</strong></td>
+<td style="text-align: left;">GitLab SRE</td>
+<td style="text-align: left;">Commercial AWS (Multi-Tenant)</td>
+<td style="text-align: left;">Commercial / Low Security Baseline</td>
+<td style="text-align: left;">Multi-tenant SaaS platform. Not a FedRAMP Moderate authorized tenant; lacks dedicated infrastructure isolation and customer-operated FIPS runner controls.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Self-Managed</strong></td>
+<td style="text-align: left;">Customer Operations Staff</td>
+<td style="text-align: left;">Customer Data Center or Customer Cloud VPC</td>
+<td style="text-align: left;">Customer ATO / Air-Gapped / DoD IL5 / IL6 / Secret</td>
+<td style="text-align: left;">Deployed via Omnibus or Helm. Full customer administrative control. The required architecture for air-gapped, DoD IL5, IL6, or Secret data boundaries.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Dedicated</strong></td>
+<td style="text-align: left;">GitLab SRE (Switchboard + Amp)</td>
+<td style="text-align: left;">Commercial AWS (Single-Tenant AWS Account)</td>
+<td style="text-align: left;">Enterprise Commercial / SOC2 / ISO 27001</td>
+<td style="text-align: left;">Single-tenant isolation using sharded Gitaly (no Praefect). Deployed in commercial AWS regions; not authorized for US Federal GovCloud workloads.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Dedicated for Government</strong></td>
+<td style="text-align: left;">GitLab SRE</td>
+<td style="text-align: left;">AWS GovCloud US-West (Isolated AWS Account)</td>
+<td style="text-align: left;">FedRAMP Moderate ATO (FR2411959145)</td>
+<td style="text-align: left;">Single-tenant AWS GovCloud instance running Ultimate tier. <strong>Not authorized for DoD IL5, IL6, or Secret workloads today.</strong> Requires customer self-managed FIPS runners outside tenant. Duo Agent Platform flows unauthorized.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>5. Integration and AI-Specific Security Weaknesses</h3>
+<h4>1. AI Context Leakage &amp; Oversharing via External Model Routing</h4>
+<p>GitLab Duo features integrate artificial intelligence across the software development lifecycle, introducing distinct data routing behaviors based on the AI Gateway architecture.</p>
+<pre><code>====================================================================================
+MANAGED AI GATEWAY PATH (Commercial Default - Unauthorized for GovCloud)
+====================================================================================
+[ User IDE / MR Context ] ---&gt; [ GitLab App ] ---&gt; [ GitLab.com AI Gateway ]
+                                                          │
+                                                          ▼ (External Egress)
+                                           [ Multi-Tenant Vendor LLMs ]
+                                           (Anthropic / Google / OpenAI)
+
+====================================================================================
+SELF-HOSTED AI GATEWAY PATH (Authorized GovCloud &amp; Self-Managed Pattern)
+====================================================================================
+[ User IDE / MR Context ] ---&gt; [ GitLab App ] ---&gt; [ Customer In-Boundary AI Gateway ]
+                                                          │
+                                                          ▼ (In-Boundary Direct Routing)
+                                           [ Customer Model Runtimes ]
+                                           (AWS Bedrock-Gov / Azure-Gov / Local vLLM)
+</code></pre>
+<ul>
+<li><strong>Managed AI Gateway Path</strong>: Context from source code repositories, Merge Requests, issues, and pipeline logs is routed through the central GitLab-managed AI Gateway on commercial endpoints, which forwards prompts to external third-party model providers (e.g., Anthropic Claude, Google Gemini, OpenAI).<ul>
+<li><em>Security Weakness</em>: Transmits proprietary code and CUI across external vendor endpoints outside the agency's authorization boundary. This path is <strong>unauthorized</strong> on Dedicated for Government.</li>
+</ul>
+</li>
+<li><strong>Self-Hosted AI Gateway Path</strong>: The AI Gateway component is deployed directly within the customer's security boundary (supported on Self-Managed and Dedicated for Government), routing prompts exclusively to customer-managed model runtimes (e.g., AWS Bedrock-Gov, Azure-Gov OpenAI, or local vLLM instances).<ul>
+<li><em>Security Control &amp; Architectural Distinction</em>: Basic AI interactions (e.g., Code Suggestions, Chat, MR Summaries) use the Self-Hosted AI Gateway path to keep data within the compliance boundary. However, <strong>Duo Agent Platform foundational agents and multi-tool agentic workflows are explicitly unauthorized</strong> on Dedicated for Government.</li>
+</ul>
+</li>
+</ul>
+<h4>2. Identity Provider (IdP) Breakage and Break-Glass Account Lockout</h4>
+<p>Authentication integration failures can result in administrative lockout or non-compliance with federal identity mandates.</p>
+<ul>
+<li><strong>Administrative Boundary Split</strong>: Infrastructure management (hypervisor, host OS, AWS account configuration) is managed exclusively by GitLab SREs via Switchboard/Amp. Application governance (users, groups, roles, permissions) is managed exclusively by agency administrators. Agency administrators have no host-level or cloud-console access.</li>
+<li><strong>NIST SP 800-53 Control Alignments</strong>:<ul>
+<li><strong>AC-2 (Account Management)</strong>: Platform administrators must enforce continuous account reviews and monitor atypical usage via abuse reports and spam logs consolidated in the Admin area.</li>
+<li><strong>AC-7 (Unsuccessful Logic Attempts)</strong>: Dedicated for Government enforces automatic account lockouts after 10 failed login attempts, locking the account for 10 minutes (or until manually unlocked by an administrator).</li>
+<li><strong>IA-5 (Authenticator Management)</strong>: Requires credential change mandates on first login, strict SSH key length enforcement (FIPS-compliant curves), and credentials inventory reviews.</li>
+</ul>
+</li>
+<li><strong>Procedural Mitigations</strong>:<ul>
+<li>Federate standard user access with the enterprise agency IdP (SAML 2.0 / OIDC) to enforce mandatory PIV/CAC hardware smart card authentication.</li>
+<li>Enable built-in <strong>Admin Mode</strong>, requiring administrators to re-authenticate and explicitly elevate their session prior to accessing administrative functions.</li>
+<li>Configure the primary local root account as a restricted break-glass account, secured with FIPS-compliant, phishing-resistant WebAuthn hardware tokens (2FA).</li>
+</ul>
+</li>
+</ul>
+<h4>3. Explicit Documentation Silence &amp; Unsourced Architectural Gaps</h4>
+<p>To maintain audit integrity, the following architectural boundaries are explicitly designated as <strong>SILENCE</strong>:</p>
+<ul>
+<li><strong>Silence on Slack/Teams Webhooks</strong>: Source documentation does not confirm whether third-party notification webhooks (Slack/Teams) are authorized or compliant inside the FedRAMP boundary for Dedicated for Government.</li>
+<li><strong>Silence on Hosted FIPS Runners</strong>: Source context confirms that hosted FIPS runners for Dedicated for Government were designated as a future release; no operational failure data or active implementation specs exist in the current documentation.</li>
+<li><strong>Silence on KAS Authorization</strong>: Source context lacks documentation confirming explicit FedRAMP Provisional Authorization (PA) coverage for the GitLab Agent for Kubernetes (KAS) within Dedicated for Government.</li>
+<li><strong>Silence on High-Impact Levels</strong>: GitLab Dedicated for Government is explicitly <strong>NOT</strong> authorized for DoD IL5, IL6, or Secret workloads today. Any assertions claiming native higher-impact capabilities are unsourced.</li>
+<li><strong>Silence on Praefect in Dedicated</strong>: Dedicated architectures explicitly use sharded Gitaly instead of Praefect (Gitaly Cluster). Failure modes involving Praefect split-brain apply strictly to Self-Managed deployments.</li>
+</ul>
+<hr />
+<h3>6. Master Failure Mode and Security Weakness Matrix</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">ID</th>
+<th style="text-align: left;">Weakness / Failure Mode</th>
+<th style="text-align: left;">Architectural View</th>
+<th style="text-align: left;">Symptom</th>
+<th style="text-align: left;">Root Cause</th>
+<th style="text-align: left;">Blast Radius</th>
+<th style="text-align: left;">Supported Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>FM-01</strong></td>
+<td style="text-align: left;">Compliance Boundary &amp; ATO Misinterpretation</td>
+<td style="text-align: left;">Conceptual</td>
+<td style="text-align: left;">Sensitive workloads (CUI/IL5) deployed on unauthorized commercial SaaS/Dedicated</td>
+<td style="text-align: left;">Conflating CSP FedRAMP listing (FR2411959145) with agency-level ATO decision</td>
+<td style="text-align: left;">Total regulatory non-compliance; data spillage across commercial tenant boundaries</td>
+<td style="text-align: left;">Require explicit AO Authorization Letter and SSP naming exact offering and boundaries</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-02</strong></td>
+<td style="text-align: left;">Control/Job Plane Trust Boundary Conflation</td>
+<td style="text-align: left;">Conceptual</td>
+<td style="text-align: left;">Arbitrary user build code executing adjacent to control plane networks</td>
+<td style="text-align: left;">Conceptual flaw treating job execution environments as trusted control plane extensions</td>
+<td style="text-align: left;">Lateral movement from compromised worker host into control plane DB or cloud accounts</td>
+<td style="text-align: left;">Deploy customer-managed FIPS runners on isolated infrastructure outside tenant boundary</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-03</strong></td>
+<td style="text-align: left;">Runner Token Theft &amp; Impersonation</td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Rogue workers polling queue, exfiltrating code/secrets, injecting bad artifacts</td>
+<td style="text-align: left;">Storage of unrotated, broadly scoped runner tokens in accessible logs or code repos</td>
+<td style="text-align: left;">Pipeline execution compromise; credential exfiltration; source code exposure</td>
+<td style="text-align: left;">Enforce fine-grained token scoping, periodic automated rotation, and zero-trust networks</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-04</strong></td>
+<td style="text-align: left;">Puma Worker Exhaustion &amp; Hard Timeouts</td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">HTTP 502/500 gateway errors; unlogged drops in Rack middleware stack</td>
+<td style="text-align: left;">Dynamic allocations exceeding GC rates; worker killer recycling; threads &gt;15; &gt;60s timeouts</td>
+<td style="text-align: left;">Application downtime, dropped user sessions, failed API/Git operations</td>
+<td style="text-align: left;">Scale RAM per worker, cap threads (&lt;=14), offload &gt;60s requests to Sidekiq</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-05</strong></td>
+<td style="text-align: left;">Sidekiq / Redis Queue Bottlenecks</td>
+<td style="text-align: left;">Logical</td>
+<td style="text-align: left;">Growing background job backlogs; delayed MR updates and scan ingestion</td>
+<td style="text-align: left;">Redis memory pressure; shared cache/queue instance; unpersisted queue loss on reboot</td>
+<td style="text-align: left;">Asynchronous workflow stagnation; system latency; job loss on restart</td>
+<td style="text-align: left;">Isolate dedicated Redis instances (Cache vs Persistent); scale RAM; bind Sidekiq queues</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-06</strong></td>
+<td style="text-align: left;">Gitaly Disk IOPS Exhaustion &amp; Unhalted Execution</td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">High Git RPC latency; 507 Insufficient Storage; 14 Deadline Exceeded (57s) errors</td>
+<td style="text-align: left;">Low IOPS storage (&lt;7000 IOPS); running Gitaly HA on K8s; unhalted background <code>git</code> commands</td>
+<td style="text-align: left;">Complete Git read/write outage; stalled CI/CD cloning; persistent 100% CPU/IOPS host load</td>
+<td style="text-align: left;">Enforce 7000–8000 IOPS minimum SSDs; retain Gitaly HA on VMs; use sharded Gitaly</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-07</strong></td>
+<td style="text-align: left;">Offering &amp; Impact Level Licensing Mismatch</td>
+<td style="text-align: left;">Physical</td>
+<td style="text-align: left;">Accreditation rejection; illegal data placement in commercial cloud regions</td>
+<td style="text-align: left;">Attempting to use SaaS/Dedicated commercial for DoD IL5/IL6/Secret requirements</td>
+<td style="text-align: left;">Operational project halt; regulatory violation; total loss of compliance status</td>
+<td style="text-align: left;">Mandate Self-Managed for air-gap/IL5/IL6/Secret; Dedicated for Gov for FedRAMP Moderate</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-08</strong></td>
+<td style="text-align: left;">AI Context Leakage via External Model Routing</td>
+<td style="text-align: left;">Integration &amp; AI</td>
+<td style="text-align: left;">Code snippets, MR context, and CUI egressing to third-party vendor LLM endpoints</td>
+<td style="text-align: left;">Routing AI prompts through commercial GitLab-managed AI Gateway endpoints</td>
+<td style="text-align: left;">Data exfiltration across compliance boundaries; violation of FedRAMP sovereignty</td>
+<td style="text-align: left;">Deploy Self-Hosted AI Gateway with in-boundary model runtimes; disable Duo Agent Platform</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>FM-09</strong></td>
+<td style="text-align: left;">IdP Integration Breakage &amp; Admin Lockout</td>
+<td style="text-align: left;">Integration &amp; AI</td>
+<td style="text-align: left;">Platform-wide SSO sign-in failure; loss of CAC/PIV smart card enforcement</td>
+<td style="text-align: left;">Expired IdP certs; bad SAML assertions; lost root break-glass credentials</td>
+<td style="text-align: left;">Administrative lockout; user access denial; violation of NIST AC-2, AC-7, IA-5 controls</td>
+<td style="text-align: left;">Integrate external agency IdP, enable Admin Mode, secure root via WebAuthn 2FA</td>
+</tr>
+</tbody>
+</table>
+</article>
+</body>
+</html>
