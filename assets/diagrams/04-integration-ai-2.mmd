@@ -1,0 +1,7 @@
+flowchart LR
+  USER["User prompt"] --> AI["AI feature / copilot"]
+  AI --> GROUND["Grounding data"]
+  GROUND --> CTRL{"Labels, DLP, access checks"}
+  CTRL -->|allowed| AI
+  AI --> RESP["Response"]
+  AI --> LOG["Audit and interaction logs"]

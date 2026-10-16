@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.svg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Learn GitLab DevSecOps Platform: Architect Study Console</title>
+  <meta name="description" content="Architect study console for GitLab DevSecOps: single-tenant GovCloud boundaries, Control Plane vs Job Plane split, and zero-egress self-hosted AI Gateway.">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/enhance.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div class="bg-watermark"></div>
+
+  <div class="print-header">
+    <div style="font-size:1.25rem;font-weight:800;color:#0f172a">Learn GitLab DevSecOps Platform: Architect Study Console</div>
+    <div style="font-size:.85rem;color:#475569;margin-top:2px">Architecture deep dive · FedRAMP Moderate FR2411959145 · GitLab-grounded sources</div>
+  </div>
+
+  <!-- Mobile Top Bar -->
+  <header class="mobile-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="assets/hero.svg" alt="GitLab Emblem" style="width:30px;height:30px;border-radius:6px;">
+      <span class="mobile-title">Learn GitLab DevSecOps</span>
+    </div>
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">☰</button>
+  </header>
+
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header-box">
+      <div class="sidebar-hero-container">
+        <img class="sidebar-hero-img" src="assets/hero.svg" alt="GitLab DevSecOps Emblem">
+        <div>
+          <div class="sidebar-badge">Console v2.0</div>
+          <div class="sidebar-header-title">Learn GitLab</div>
+        </div>
+      </div>
+      <div class="sidebar-sub">DevSecOps Platform Architecture</div>
+    </div>
+
+    <button type="button" class="nav-search" id="navSearch" aria-label="Search (Ctrl K)">
+      <span>Search views, terms, notes</span>
+      <kbd>Ctrl K</kbd>
+    </button>
+
+    <div class="nav-links" id="nav" role="navigation" aria-label="Study Console Sections">
+      <div class="nav-group" data-group="today">
+        <a class="nav-item active" href="#/today" data-v="today">
+          <span class="ni-ic">⚡</span>Today
+        </a>
+      </div>
+
+      <div class="nav-group" data-group="learn">
+        <div class="nav-group-label">Learn</div>
+        <a class="nav-item" href="#/learn" data-v="learn">
+          <span class="ni-ic">📚</span>Curriculum (8 Blocks)
+        </a>
+        <a class="nav-item" href="#/views" data-v="views">
+          <span class="ni-ic">📐</span>Architecture Views
+        </a>
+        <a class="nav-item" href="#/slides" data-v="slides">
+          <span class="ni-ic">📽</span>Presentation Deck
+        </a>
+        <a class="nav-item" href="#/debates" data-v="debates">
+          <span class="ni-ic">⚖</span>Claims & Debates
+        </a>
+      </div>
+
+      <div class="nav-group" data-group="practice">
+        <div class="nav-group-label">Practice</div>
+        <a class="nav-item" href="#/practice" data-v="practice">
+          <span class="ni-ic">🎯</span>Practice & Quizzes
+        </a>
+        <a class="nav-item" href="#/failure-modes" data-v="failure-modes">
+          <span class="ni-ic">🛡</span>Failure Modes
+        </a>
+        <a class="nav-item" href="#/glossary" data-v="glossary">
+          <span class="ni-ic">📖</span>Glossary Ledger
+        </a>
+        <a class="nav-item" href="#/sources" data-v="sources">
+          <span class="ni-ic">🔗</span>Source Ledger
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Viewport -->
+  <main class="main-wrapper" id="main-content" tabindex="-1">
+    <!-- Populated dynamically by js/app.js -->
+  </main>
+
+  <!-- Global Search Modal (Ctrl + K) -->
+  <div class="search-modal" id="search-modal" role="dialog" aria-modal="true" aria-label="Quick Search">
+    <div class="search-box">
+      <div class="search-input-wrapper">
+        <span style="color:var(--text-muted);margin-right:10px;font-size:1.1rem;">🔍</span>
+        <input type="text" id="search-input" class="search-input" placeholder="Search architecture views, glossary, blocks, failure modes...">
+        <kbd style="font-family:var(--font-mono);font-size:.7rem;padding:2px 6px;background:var(--bg-canvas);border:1px solid var(--border-default);border-radius:4px;color:var(--text-muted);">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal for Diagrams & Slides -->
+  <div class="modal-overlay" id="lightbox-modal" role="dialog" aria-modal="true" aria-label="Diagram Lightbox">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div style="font-weight:700;color:var(--text-primary);" id="lightbox-title">Architecture Diagram</div>
+        <button class="btn btn-sm" onclick="window.EnhanceEngine.closeLightbox()" aria-label="Close modal">✕ Close</button>
+      </div>
+      <div class="modal-body">
+        <img id="lightbox-img" src="" alt="High-resolution architecture diagram">
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/enhance.js"></script>
+  <script>
+    // Service worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

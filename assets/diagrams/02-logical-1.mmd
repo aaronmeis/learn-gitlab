@@ -1,0 +1,9 @@
+erDiagram
+  PROJECT ||--o{ MERGE_REQUEST : contains
+  MERGE_REQUEST ||--o{ PIPELINE : triggers
+  PIPELINE ||--o{ JOB : contains
+  JOB }o--|| WORKER : executes
+  JOB ||--o{ FINDING : may_write
+  PROJECT ||--|| REPO : has
+  REPO }o--|| GIT_RPC : stored_on
+  WORKER }o--o{ REGISTRY : pushes

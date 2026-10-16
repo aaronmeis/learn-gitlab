@@ -1,0 +1,16 @@
+{
+  "name": "Learn GitLab DevSecOps Platform: Architect Study Console",
+  "short_name": "Learn GitLab",
+  "description": "Architect study console for GitLab DevSecOps: single-tenant GovCloud boundaries, the Control Plane vs. Job Plane split, and the zero-egress self-hosted AI Gateway.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

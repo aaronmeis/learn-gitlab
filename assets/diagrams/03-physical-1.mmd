@@ -1,0 +1,18 @@
+flowchart TB
+  subgraph GovCloud["AWS GovCloud US-West — GitLab-operated tenant"]
+    SW["Switchboard / Amp (GitLab)"]
+    subgraph Acct["Customer dedicated AWS account"]
+      GL["GitLab Ultimate (Puma, Sidekiq, Postgres, Redis, Workhorse)"]
+      GIT["Sharded Gitaly"]
+      REG["Registry"]
+    end
+  end
+  subgraph Agency["Agency estate"]
+    IDP["Agency IdP (SAML/OIDC, PIV/CAC)"]
+    RN["Self-managed FIPS runners"]
+    VPC["Optional PrivateLink / customer VPC"]
+  end
+  IDP --> GL
+  RN -->|"job token"| GL
+  RN --> GIT
+  VPC --> GL

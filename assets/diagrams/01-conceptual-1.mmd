@@ -1,0 +1,24 @@
+flowchart LR
+  subgraph Org["Organization"]
+    DEV["People who change software"]
+    REV["People who approve"]
+    SEC["People who set scan policy"]
+  end
+  subgraph CP["Control plane"]
+    CR["Change record"]
+    PIPE["Pipeline contract"]
+    GIT["Git history"]
+    FIND["Findings"]
+  end
+  subgraph JP["Job plane"]
+    W["Workers"]
+  end
+  IDP["Identity provider"] --> CP
+  DEV --> CR
+  REV --> CR
+  SEC --> FIND
+  CR --> PIPE
+  PIPE --> W
+  W --> FIND
+  W --> ART["Artifacts"]
+  AO["Authorizing official"] -.letter.-> CP
