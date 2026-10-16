@@ -468,6 +468,108 @@
     `;
   }
 
+  function renderShorts(data) {
+    const shorts = data.shorts || [];
+    return `
+      <div>
+        <h1 class="page-title">Video Shorts Theater</h1>
+        <p class="page-subtitle">
+          6 motion-graphic architecture shorts. No cinematic fluff. Each short owns ONE job: boundaries, control-plane vs job-plane flows, external integrations, and the zero-egress AI path.
+        </p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:1.5rem;margin-top:1.5rem;">
+          ${shorts.map((s, idx) => `
+            <div class="card" style="display:flex;flex-direction:column;overflow:hidden;padding:0;">
+              <div style="background:#000;width:100%;height:320px;display:flex;align-items:center;justify-content:center;">
+                <video controls style="width:100%;height:100%;object-fit:contain;" preload="metadata" src="${s.videoUrl}">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              <div style="padding:1.25rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;">
+                  <span class="tag-badge gitlab">Short 0${idx + 1}</span>
+                  <span class="rung-badge rung-200">Architecture Short</span>
+                </div>
+                <h3 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:.5rem;">${s.title}</h3>
+                <p style="font-size:.82rem;color:var(--text-secondary);line-height:1.5;">${s.focus}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  let activeLibraryChapter = 0;
+
+  function renderLibrary(data) {
+    const chapters = data.library || [];
+    if (chapters.length === 0) {
+      return `<div><h1 class="page-title">Deep Dive Library</h1><p class="page-subtitle">No chapters loaded.</p></div>`;
+    }
+
+    const current = chapters[activeLibraryChapter] || chapters[0];
+
+    function formatMarkdown(text) {
+      if (!text) return '';
+      let html = text
+        .replace(/^### (.*$)/gim, '<h3 style="font-size:1.15rem;font-weight:700;color:var(--text-primary);margin:1.4rem 0 .4rem;">$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2 style="font-size:1.35rem;font-weight:800;color:var(--text-primary);margin:1.8rem 0 .6rem;border-bottom:1px solid var(--border-muted);padding-bottom:.4rem;">$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1 style="font-size:1.6rem;font-weight:800;color:var(--text-primary);margin-bottom:.75rem;">$1</h1>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong style="color:var(--text-primary);">$1</strong>')
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        .replace(/`([^`]+)`/gim, '<code style="background:var(--bg-canvas);border:1px solid var(--border-default);padding:2px 5px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem;">$1</code>')
+        .replace(/^\* (.*$)/gim, '<li style="margin-left:1.5rem;color:var(--text-secondary);font-size:.9rem;line-height:1.6;">$1</li>')
+        .replace(/^\- (.*$)/gim, '<li style="margin-left:1.5rem;color:var(--text-secondary);font-size:.9rem;line-height:1.6;">$1</li>')
+        .replace(/\n\n/gim, '<br><br>');
+      return html;
+    }
+
+    return `
+      <div>
+        <h1 class="page-title">Architecture Deep Dive Library</h1>
+        <p class="page-subtitle">
+          Exhaustive specifications, TOGAF/DoDAF crosswalks, security catalogs, and executive briefings generated from the deep-dive research.
+        </p>
+
+        <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;margin-top:1.5rem;">
+          <div style="background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
+            <div style="padding:.75rem 1rem;background:var(--bg-surface);border-bottom:1px solid var(--border-default);font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);">
+              Chapters (${chapters.length})
+            </div>
+            <div style="display:flex;flex-direction:column;max-height:650px;overflow-y:auto;">
+              ${chapters.map((ch, idx) => `
+                <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border-muted);cursor:pointer;background:${idx === activeLibraryChapter ? 'rgba(252,109,38,0.12)' : 'transparent'};border-left:3px solid ${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'transparent'};" onclick="window.AppEngine.selectChapter(${idx})">
+                  <div style="font-weight:600;font-size:.88rem;color:${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'var(--text-primary)'};">${ch.title}</div>
+                  <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px;">${ch.filename}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="card" style="padding:2rem;min-height:650px;background:var(--bg-card);max-height:85vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid var(--border-muted);padding-bottom:.75rem;">
+              <span class="tag-badge gitlab">Chapter ${activeLibraryChapter + 1} of ${chapters.length}</span>
+              <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--text-muted);">${current.filename}</span>
+            </div>
+            <div style="font-size:.92rem;line-height:1.65;color:var(--text-primary);">
+              ${formatMarkdown(current.content)}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function selectChapter(idx) {
+    activeLibraryChapter = idx;
+    const data = window.CONSOLE_DATA;
+    if (data) {
+      const appEl = document.getElementById('main-content');
+      if (appEl) appEl.innerHTML = renderLibrary(data);
+    }
+  }
+
   function renderDebates(data) {
     return `
       <div>
@@ -663,6 +765,12 @@
           window.EnhanceEngine.initSlides();
         }
         break;
+      case 'shorts':
+        appEl.innerHTML = renderShorts(data);
+        break;
+      case 'library':
+        appEl.innerHTML = renderLibrary(data);
+        break;
       case 'debates':
         appEl.innerHTML = renderDebates(data);
         break;
@@ -826,6 +934,7 @@
 
   window.AppEngine = {
     toggleModule,
+    selectChapter,
     saveState,
     AppState
   };

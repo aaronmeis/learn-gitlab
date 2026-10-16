@@ -688,8 +688,79 @@ def build():
     print("Loading architecture views...")
     views = load_views()
     
+def load_shorts():
+    topics_file = Path(r"(local output path)")
+    topics = {}
+    if topics_file.exists():
+        topics = json.loads(topics_file.read_text(encoding="utf-8"))
+    
+    video_map = {
+        "01-what-and-boundary": "assets/shorts/The DevSecOps Platform Boundary Explained.mp4",
+        "02-conceptual-to-physical": "assets/shorts/How GitLab Isolates Untrusted Code.mp4",
+        "03-data-flow": "assets/shorts/How GitLab Routes a Pipeline Job.mp4",
+        "04-third-party": "assets/shorts/How GitLab Isolates Untrusted Build Jobs.mp4",
+        "05-ai-path": "assets/shorts/How GitLab Duo Stops AI Oversharing.mp4",
+        "06-failure-mode": "assets/shorts/How GitLab Runner Token Theft Works.mp4"
+    }
+
+    shorts = []
+    for item in topics.get("items", []):
+        name = item.get("name")
+        shorts.append({
+            "name": name,
+            "title": item.get("title"),
+            "focus": item.get("focus"),
+            "videoUrl": video_map.get(name, "")
+        })
+    return shorts
+
+def load_library():
+    lib_dir = SITE_ROOT / "library"
+    chapters = []
+    if not lib_dir.exists():
+        return []
+        
+    for md_file in sorted(lib_dir.glob("*.md")):
+        raw_text = md_file.read_text(encoding="utf-8")
+        title_match = re.search(r"^#\s+(.+)$", raw_text, re.MULTILINE)
+        title = title_match.group(1).strip() if title_match else md_file.stem
+        title = title.replace("GitLab DevSecOps Platform Architecture:", "").replace("GitLab DevSecOps Platform Architecture_", "").strip()
+        
+        clean_body = re.sub(r"^#.*$", "", raw_text, flags=re.MULTILINE).strip()
+        excerpt = clean_body[:240].replace("\n", " ").strip() + "..."
+        slug = md_file.stem.lower().replace(" ", "-").replace("_", "-")[:40]
+        
+        chapters.append({
+            "id": slug,
+            "title": title,
+            "filename": md_file.name,
+            "excerpt": excerpt,
+            "content": raw_text
+        })
+    return chapters
+
+def build():
+    print("Parsing sources...")
+    srcs = load_sources()
+    print(f"Loaded {len(srcs)} sources.")
+    
+    print("Loading video cut script...")
+    video_cut = load_video_cut()
+    
+    print("Loading debates...")
+    debates = load_debates()
+    print(f"Loaded {len(debates)} debates.")
+    
+    print("Loading architecture views...")
+    views = load_views()
+    
     print("Loading curriculum blocks...")
     blocks = load_curriculum_blocks()
+    
+    print("Loading shorts and library...")
+    shorts = load_shorts()
+    library = load_library()
+    print(f"Loaded {len(shorts)} shorts and {len(library)} library chapters.")
     
     print("Enriching glossary, failure modes, and quiz...")
     glossary = enrich_glossary()
@@ -708,6 +779,8 @@ def build():
         },
         "sources": srcs,
         "video": video_cut,
+        "shorts": shorts,
+        "library": library,
         "debates": debates,
         "views": views,
         "blocks": blocks,
@@ -729,3 +802,4 @@ def build():
 
 if __name__ == "__main__":
     build()
+
