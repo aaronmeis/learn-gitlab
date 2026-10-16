@@ -1,5 +1,5 @@
 // Service Worker for Learn GitLab Study Console
-const CACHE_NAME = 'learn-gitlab-v5';
+const CACHE_NAME = 'learn-gitlab-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
