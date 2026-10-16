@@ -211,10 +211,11 @@
     }
   ],
   "video": {
-    "title": "GitLab DevSecOps Platform Architecture",
-    "footer": "Tech Deep Dive  ·  GitLab DevSecOps Platform Architecture",
+    "title": "GitLab DevSecOps Platform — One-Day Mastery",
+    "footer": "One-Day Mastery  ·  GitLab DevSecOps Platform",
+    "youtube": "PzEIulYVSrA",
     "voice": "IKne3meq5aSn9XLyUdCD",
-    "open": "This is a technical deep dive on GitLab DevSecOps Platform Architecture. The cut walks the NotebookLM slides: the control plane versus the job plane, Dedicated for Government, and the AI path that stays inside the customer boundary.",
+    "open": "This is the One-Day Mastery narrated cut for GitLab DevSecOps Platform. The cut walks the NotebookLM slides: the control plane versus the job plane, Dedicated for Government, and the AI path that stays inside the customer boundary.",
     "recap": "We covered the ask for Dedicated for Government, the control-plane and job-plane split, Gitaly over Git RPC, customer FIPS runners outside the tenant, agency IdP and PrivateLink, the self-hosted AI Gateway, shared responsibility, and the 90-day start: IdP, runners, first five workloads.",
     "close": "Thank you. Draw the control plane and the job plane from memory. If you can name where runners and Duo live, you have it.",
     "labels": [

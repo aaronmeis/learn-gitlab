@@ -427,6 +427,21 @@
   object-fit: contain;
 }
 
+/* Presentation video (YouTube) above the slide deck */
+.deck-video-top {
+  margin: 1.25rem 0 1.75rem;
+}
+.wide-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  min-height: 220px;
+  background: #000;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-default);
+}
+
 /* Slide Deck Viewer */
 .slide-viewer {
   background: var(--bg-card);

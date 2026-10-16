@@ -454,13 +454,21 @@
   }
 
   function renderSlides(data) {
+    const v = (data && data.video) || {};
+    const yt = (v.youtube || '').trim();
+    const ytEmbed = yt
+      ? `<div class="deck-video-top">
+          <iframe class="wide-player" src="https://www.youtube-nocookie.com/embed/${yt}?rel=0&playsinline=1&modestbranding=1" title="${v.title || 'One-Day Mastery presentation'}" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy" style="border:0"></iframe>
+          <p class="obj" style="margin-top:.55rem"><a href="https://www.youtube.com/watch?v=${yt}" target="_blank" rel="noopener">Open the One-Day Mastery presentation on YouTube ↗</a></p>
+        </div>`
+      : '';
     return `
       <div>
         <h1 class="page-title">Presentation Deck & Video Cut</h1>
         <p class="page-subtitle">
-          The 15-slide architectural briefing deck: from fragmented toolchains and control plane separation to the single-tenant GovCloud blueprint and the Q4 FY26 decision memo.
+          One-Day Mastery narrated cut on top, then the 15-slide NotebookLM deck: control plane versus job plane, Dedicated for Government, and the Q4 FY26 decision memo.
         </p>
-
+        ${ytEmbed}
         <div class="slide-viewer" id="slide-viewer-box">
           <!-- Rendered by EnhanceEngine -->
         </div>
