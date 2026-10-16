@@ -8,11 +8,11 @@
     <mxCell id="barTop" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
       <mxGeometry x="0" y="0" width="1920" height="6" as="geometry"/>
     </mxCell>
-    <mxCell id="title" value="Conceptual view — trust domains (OV-1)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=28;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
-      <mxGeometry x="40" y="12" width="1500" height="32" as="geometry"/>
+    <mxCell id="title" value="Conceptual view — trust domains (OV-1)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=32;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="12" width="1500" height="38" as="geometry"/>
     </mxCell>
-    <mxCell id="sub" value="GitLab Dedicated for Government · FedRAMP Moderate FR2411959145 · Azure-style agnostic icons" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
-      <mxGeometry x="40" y="44" width="1500" height="22" as="geometry"/>
+    <mxCell id="sub" value="GitLab Dedicated for Government · FedRAMP Moderate FR2411959145 · Azure-style agnostic icons" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=18;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="44" width="1500" height="26" as="geometry"/>
     </mxCell>
     <mxCell id="barHead" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
       <mxGeometry x="40" y="70" width="1840" height="3" as="geometry"/>
@@ -20,105 +20,105 @@
     <mxCell id="barFoot" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
       <mxGeometry x="40" y="1036" width="1840" height="3" as="geometry"/>
     </mxCell>
-    <mxCell id="ftL" value="Internal · learn-gitlab architecture pack" style="text;html=1;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
-      <mxGeometry x="40" y="1044" width="560" height="22" as="geometry"/>
+    <mxCell id="ftL" value="Internal · learn-gitlab architecture pack" style="text;html=1;align=left;fontFamily=Helvetica;fontSize=18;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1044" width="560" height="26" as="geometry"/>
     </mxCell>
-    <mxCell id="ftM" value="Conceptual · control vs job plane" style="text;html=1;align=center;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
-      <mxGeometry x="620" y="1044" width="680" height="22" as="geometry"/>
+    <mxCell id="ftM" value="Conceptual · control vs job plane" style="text;html=1;align=center;fontFamily=Helvetica;fontSize=18;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="620" y="1044" width="680" height="26" as="geometry"/>
     </mxCell>
-    <mxCell id="ftR" value="2026-10-16  ·  1 / 4" style="text;html=1;align=right;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
-      <mxGeometry x="1320" y="1044" width="560" height="22" as="geometry"/>
+    <mxCell id="ftR" value="2026-10-16  ·  1 / 4" style="text;html=1;align=right;fontFamily=Helvetica;fontSize=18;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="1044" width="560" height="26" as="geometry"/>
     </mxCell>
     <mxCell id="barBottom" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
       <mxGeometry x="0" y="1074" width="1920" height="6" as="geometry"/>
     </mxCell>
 
-    <mxCell id="cp" value="Tenant control plane (GovCloud) · GitLab managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F4FC;strokeColor=#0B5F8A;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+    <mxCell id="cp" value="Tenant control plane (GovCloud) · GitLab managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F4FC;strokeColor=#0B5F8A;strokeWidth=2;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
       <mxGeometry x="40" y="100" width="720" height="880" as="geometry"/>
     </mxCell>
 
     <mxCell id="i1" value="Change record
-(Rails / Puma)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/app_services/App_Service_Plans.svg;" vertex="1" parent="1">
+(Rails / Puma)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/app_services/App_Service_Plans.svg;" vertex="1" parent="1">
       <mxGeometry x="90" y="180" width="64" height="58" as="geometry"/>
     </mxCell>
 
     <mxCell id="i2" value="Git storage
-(Gitaly)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
+(Gitaly)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
       <mxGeometry x="280" y="180" width="64" height="58" as="geometry"/>
     </mxCell>
 
     <mxCell id="i3" value="System of record
-(PostgreSQL)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;" vertex="1" parent="1">
+(PostgreSQL)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;" vertex="1" parent="1">
       <mxGeometry x="470" y="180" width="52" height="64" as="geometry"/>
     </mxCell>
 
     <mxCell id="i4" value="Job queue
-(Redis / Sidekiq)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Cache_Redis.svg;" vertex="1" parent="1">
+(Redis / Sidekiq)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Cache_Redis.svg;" vertex="1" parent="1">
       <mxGeometry x="90" y="380" width="64" height="52" as="geometry"/>
     </mxCell>
 
     <mxCell id="i5" value="Findings ledger
-(scans on MR)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_SQL.svg;" vertex="1" parent="1">
+(scans on MR)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_SQL.svg;" vertex="1" parent="1">
       <mxGeometry x="280" y="380" width="64" height="46" as="geometry"/>
     </mxCell>
 
     <mxCell id="i6" value="Policy edge
-(SAML / OIDC)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="1">
+(SAML / OIDC)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="1">
       <mxGeometry x="470" y="380" width="64" height="58" as="geometry"/>
     </mxCell>
 
-    <mxCell id="ao" value="AO signs this plane as the system of record for code, pipelines, and findings" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFF3B0;strokeColor=#B38F00;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+    <mxCell id="ao" value="AO signs this plane as the system of record for code, pipelines, and findings" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFF3B0;strokeColor=#B38F00;strokeWidth=2;fontFamily=Helvetica;fontSize=18;fontColor=#111111;" vertex="1" parent="1">
       <mxGeometry x="90" y="600" width="560" height="70" as="geometry"/>
     </mxCell>
 
-    <mxCell id="jp" value="Customer job plane (agency VPC) · customer managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F8F0;strokeColor=#0A7A4F;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+    <mxCell id="jp" value="Customer job plane (agency VPC) · customer managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F8F0;strokeColor=#0A7A4F;strokeWidth=2;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
       <mxGeometry x="800" y="100" width="700" height="480" as="geometry"/>
     </mxCell>
 
     <mxCell id="j1" value="FIPS runners
-(untrusted exec)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
+(untrusted exec)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
       <mxGeometry x="860" y="200" width="64" height="58" as="geometry"/>
     </mxCell>
 
     <mxCell id="j2" value="Self-hosted AI GW
-(zero-egress Duo)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
+(zero-egress Duo)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
       <mxGeometry x="1040" y="200" width="64" height="48" as="geometry"/>
     </mxCell>
 
     <mxCell id="j3" value="Agency IdP
-(PIV / CAC)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="1">
+(PIV / CAC)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="1">
       <mxGeometry x="1220" y="200" width="64" height="58" as="geometry"/>
     </mxCell>
 
     <mxCell id="j4" value="PrivateLink
-to tenant" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/networking/Private_Endpoint.svg;" vertex="1" parent="1">
+to tenant" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/networking/Private_Endpoint.svg;" vertex="1" parent="1">
       <mxGeometry x="860" y="380" width="64" height="58" as="geometry"/>
     </mxCell>
 
     <mxCell id="j5" value="Workload clusters
-(optional KAS)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/containers/Kubernetes_Services.svg;" vertex="1" parent="1">
+(optional KAS)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/containers/Kubernetes_Services.svg;" vertex="1" parent="1">
       <mxGeometry x="1040" y="380" width="64" height="54" as="geometry"/>
     </mxCell>
 
-    <mxCell id="ex" value="External / unauthorized egress (not in placement)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#FDECEC;strokeColor=#B4233C;strokeWidth=2;dashed=1;dashPattern=8 8;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+    <mxCell id="ex" value="External / unauthorized egress (not in placement)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#FDECEC;strokeColor=#B4233C;strokeWidth=2;dashed=1;dashPattern=8 8;fontFamily=Helvetica;fontSize=18;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
       <mxGeometry x="800" y="620" width="700" height="360" as="geometry"/>
     </mxCell>
 
     <mxCell id="e1" value="GitLab.com
-AI Gateway" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
+AI Gateway" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
       <mxGeometry x="880" y="720" width="64" height="48" as="geometry"/>
     </mxCell>
 
     <mxCell id="e2" value="Public runner
-pools" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
+pools" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=18;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
       <mxGeometry x="1100" y="720" width="64" height="58" as="geometry"/>
     </mxCell>
 
-    <mxCell id="e3" value="Duo Agent Platform flows — blocked on current FedRAMP package" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDECEC;strokeColor=#B4233C;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+    <mxCell id="e3" value="Duo Agent Platform flows — blocked on current FedRAMP package" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FDECEC;strokeColor=#B4233C;strokeWidth=2;fontFamily=Helvetica;fontSize=18;fontColor=#111111;" vertex="1" parent="1">
       <mxGeometry x="880" y="860" width="520" height="70" as="geometry"/>
     </mxCell>
 
-    <mxCell id="legend" value="&lt;b&gt;Steps&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. &lt;b&gt;&lt;font color=&quot;#0B5F8A&quot;&gt;Control plane tenant&lt;/font&gt;&lt;/b&gt;&lt;br&gt;GitLab-managed GovCloud system of record.&lt;br&gt;&lt;br&gt;2. &lt;b&gt;&lt;font color=&quot;#0A7A4F&quot;&gt;Customer job plane&lt;/font&gt;&lt;/b&gt;&lt;br&gt;FIPS runners and self-hosted AI stay outside.&lt;br&gt;&lt;br&gt;3. &lt;b&gt;&lt;font color=&quot;#B4233C&quot;&gt;Unauthorized egress&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Commercial Duo gateway and public runners.&lt;br&gt;&lt;br&gt;4. &lt;b&gt;&lt;font color=&quot;#B38F00&quot;&gt;AO signature boundary&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Letter covers control plane evidence, not every job host." style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingRight=12;spacingTop=10;spacingBottom=10;fillColor=#F5F5F5;strokeColor=#000000;strokeWidth=2;fontFamily=Helvetica;fontSize=15;" vertex="1" parent="1">
+    <mxCell id="legend" value="&lt;b&gt;Steps&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. &lt;b&gt;&lt;font color=&quot;#0B5F8A&quot;&gt;Control plane tenant&lt;/font&gt;&lt;/b&gt;&lt;br&gt;GitLab-managed GovCloud system of record.&lt;br&gt;&lt;br&gt;2. &lt;b&gt;&lt;font color=&quot;#0A7A4F&quot;&gt;Customer job plane&lt;/font&gt;&lt;/b&gt;&lt;br&gt;FIPS runners and self-hosted AI stay outside.&lt;br&gt;&lt;br&gt;3. &lt;b&gt;&lt;font color=&quot;#B4233C&quot;&gt;Unauthorized egress&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Commercial Duo gateway and public runners.&lt;br&gt;&lt;br&gt;4. &lt;b&gt;&lt;font color=&quot;#B38F00&quot;&gt;AO signature boundary&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Letter covers control plane evidence, not every job host." style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingRight=12;spacingTop=10;spacingBottom=10;fillColor=#F5F5F5;strokeColor=#000000;strokeWidth=2;fontFamily=Helvetica;fontSize=18;" vertex="1" parent="1">
       <mxGeometry x="1560" y="96" width="320" height="900" as="geometry"/>
     </mxCell>
 

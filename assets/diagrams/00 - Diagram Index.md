@@ -10,7 +10,7 @@ description: "Diagram index for GitLab DevSecOps Platform Architecture — one D
 
 # Diagram Index — GitLab DevSecOps Platform Architecture
 
-Four architecture views. Each PNG is the house-chrome Draw.io export used on the live console. Editable sources live in `drawio/`.
+Four architecture views. Each PNG is the house-chrome Draw.io export used on the live console (Helvetica title 32 / body 18). Editable sources live in `drawio/`. Full on-prem copies: `C:\output\obsidian\drawio\learn-gitlab-*`. Vault thumbs: Obsidian `Grok/Projects/Drawio-Local-MCP/Learn-GitLab-Architecture-Views`.
 
 ## Conceptual view
 
