@@ -1,0 +1,108 @@
+<mxfile host="Electron" agent="learn-gitlab" version="28.2.8">
+  <diagram id="physical" name="physical">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="barTop" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="0" y="0" width="1920" height="6" as="geometry"/>
+    </mxCell>
+    <mxCell id="title" value="Physical view — Dedicated for Government" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=28;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="12" width="1500" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="sub" value="Single-tenant AWS GovCloud US-West · shared responsibility with customer estate" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="44" width="1500" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="barHead" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="1840" height="3" as="geometry"/>
+    </mxCell>
+    <mxCell id="barFoot" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1036" width="1840" height="3" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftL" value="Internal · learn-gitlab architecture pack" style="text;html=1;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1044" width="560" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftM" value="Physical · placement blueprint" style="text;html=1;align=center;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="620" y="1044" width="680" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftR" value="2026-10-16  ·  3 / 4" style="text;html=1;align=right;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="1044" width="560" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="barBottom" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="0" y="1074" width="1920" height="6" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="sw" value="Switchboard + Amp (GitLab operations plane)" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#F1F1EE;strokeColor=#333333;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="480" y="110" width="600" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ten" value="Customer AWS GovCloud account (tenant) · GitLab managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F4FC;strokeColor=#0B5F8A;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="40" y="210" width="980" height="760" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p1" value="Puma / Rails" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/app_services/App_Service_Plans.svg;" vertex="1" parent="1">
+      <mxGeometry x="100" y="320" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p2" value="Sidekiq" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Cache_Redis.svg;" vertex="1" parent="1">
+      <mxGeometry x="300" y="320" width="64" height="52" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p3" value="PostgreSQL" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_Database_PostgreSQL_Server.svg;" vertex="1" parent="1">
+      <mxGeometry x="500" y="320" width="52" height="64" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p4" value="Registry /
+artifacts" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/databases/Azure_SQL.svg;" vertex="1" parent="1">
+      <mxGeometry x="700" y="320" width="64" height="46" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p5" value="Sharded Gitaly
+(no Praefect)" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
+      <mxGeometry x="100" y="520" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="p6" value="Private endpoint
+ingress" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/networking/Private_Endpoint.svg;" vertex="1" parent="1">
+      <mxGeometry x="300" y="520" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="pnote" value="GitLab patches OS, DB, geo DR.
+Customer does not shell the tenant hosts.
+Cloud Native Hybrid: stateful Gitaly + Postgres stay on VMs." style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#0B5F8A;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="100" y="720" width="800" height="140" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="out" value="Outside tenant · customer managed" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F8F0;strokeColor=#0A7A4F;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="1060" y="210" width="460" height="760" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="o1" value="Agency IdP
+PIV / CAC" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/identity/Azure_Active_Directory.svg;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="320" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="o2" value="FIPS runners
+in agency VPC" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/compute/Automanaged_VM.svg;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="480" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="o3" value="Self-hosted
+AI Gateway" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="640" width="64" height="48" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="onote" value="Shared responsibility:
+customer IdP · runners · AI path" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#0A7A4F;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="1120" y="800" width="340" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="legend" value="&lt;b&gt;Steps&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. &lt;b&gt;&lt;font color=&quot;#333333&quot;&gt;Switchboard / Amp&lt;/font&gt;&lt;/b&gt;&lt;br&gt;GitLab ops plane patches the tenant.&lt;br&gt;&lt;br&gt;2. &lt;b&gt;&lt;font color=&quot;#0B5F8A&quot;&gt;Single-tenant account&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Isolation unit = AWS GovCloud account.&lt;br&gt;&lt;br&gt;3. &lt;b&gt;&lt;font color=&quot;#B38F00&quot;&gt;Sharded Gitaly&lt;/font&gt;&lt;/b&gt;&lt;br&gt;No Praefect — EBS snapshot DR.&lt;br&gt;&lt;br&gt;4. &lt;b&gt;&lt;font color=&quot;#0A7A4F&quot;&gt;Outside tenant&lt;/font&gt;&lt;/b&gt;&lt;br&gt;IdP, FIPS runners, self-hosted AI Gateway." style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingRight=12;spacingTop=10;spacingBottom=10;fillColor=#F5F5F5;strokeColor=#000000;strokeWidth=2;fontFamily=Helvetica;fontSize=15;" vertex="1" parent="1">
+      <mxGeometry x="1560" y="96" width="320" height="900" as="geometry"/>
+    </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

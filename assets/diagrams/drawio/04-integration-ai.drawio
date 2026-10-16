@@ -1,0 +1,105 @@
+<mxfile host="Electron" agent="learn-gitlab" version="28.2.8">
+  <diagram id="integration-ai" name="integration-ai">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+    <mxCell id="barTop" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="0" y="0" width="1920" height="6" as="geometry"/>
+    </mxCell>
+    <mxCell id="title" value="Integration &amp; AI — dual Duo path" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=28;fontStyle=1;fontColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="40" y="12" width="1500" height="32" as="geometry"/>
+    </mxCell>
+    <mxCell id="sub" value="Authorized self-hosted gateway versus unauthorized commercial egress on Dedicated for Government" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="44" width="1500" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="barHead" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="70" width="1840" height="3" as="geometry"/>
+    </mxCell>
+    <mxCell id="barFoot" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1036" width="1840" height="3" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftL" value="Internal · learn-gitlab architecture pack" style="text;html=1;align=left;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1044" width="560" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftM" value="Integration · AI dual path" style="text;html=1;align=center;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="620" y="1044" width="680" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="ftR" value="2026-10-16  ·  4 / 4" style="text;html=1;align=right;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;" vertex="1" parent="1">
+      <mxGeometry x="1320" y="1044" width="560" height="22" as="geometry"/>
+    </mxCell>
+    <mxCell id="barBottom" value="" style="rounded=0;fillColor=#000000;strokeColor=none;" vertex="1" parent="1">
+      <mxGeometry x="0" y="1074" width="1920" height="6" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="u1" value="IDE / Web UI
+Duo request" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/app_services/App_Service_Plans.svg;" vertex="1" parent="1">
+      <mxGeometry x="80" y="280" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="fork" value="Route" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFF3B0;strokeColor=#B38F00;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="280" y="300" width="120" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="x1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;endArrow=block;endFill=1;" edge="1" parent="1" source="u1" target="fork">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="good" value="Authorized — self-hosted (customer estate)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#E8F8F0;strokeColor=#0A7A4F;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="460" y="120" width="1000" height="320" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g1" value="Self-hosted
+AI Gateway" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
+      <mxGeometry x="540" y="200" width="64" height="48" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g2" value="Customer models
+Bedrock-gov / private" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/containers/Kubernetes_Services.svg;" vertex="1" parent="1">
+      <mxGeometry x="820" y="200" width="64" height="54" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="g3" value="Private path
+no public LLM" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/networking/Private_Endpoint.svg;" vertex="1" parent="1">
+      <mxGeometry x="1100" y="200" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="xg1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;endArrow=block;endFill=1;" edge="1" parent="1" source="fork" target="g1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="xg2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;endArrow=block;endFill=1;" edge="1" parent="1" source="g1" target="g2">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="bad" value="Unauthorized — commercial gateway (blocked on Gov Dedicated)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=8;fillColor=#FDECEC;strokeColor=#B4233C;strokeWidth=2;dashed=1;dashPattern=8 8;fontFamily=Helvetica;fontSize=15;fontStyle=1;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="460" y="500" width="1000" height="360" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="d1" value="GitLab-managed
+AI Gateway" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/ai_machine_learning/Cognitive_Services.svg;" vertex="1" parent="1">
+      <mxGeometry x="540" y="600" width="64" height="48" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="d2" value="External LLM
+APIs" style="image;aspect=fixed;html=1;points=[];align=center;verticalLabelPosition=bottom;verticalAlign=top;labelBackgroundColor=none;fontFamily=Helvetica;fontSize=15;fontColor=#111111;image=https://app.diagrams.net/img/lib/azure2/app_services/App_Service_Plans.svg;" vertex="1" parent="1">
+      <mxGeometry x="820" y="600" width="64" height="58" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="d3" value="Duo Agent Platform / autonomous agents — keep toggles off" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#FFFFFF;strokeColor=#B4233C;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#111111;" vertex="1" parent="1">
+      <mxGeometry x="540" y="760" width="700" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="xd1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;dashPattern=6 6;strokeColor=#333333;strokeWidth=2;fontFamily=Helvetica;fontSize=15;fontColor=#5F6B7A;endArrow=block;endFill=1;" edge="1" parent="1" source="fork" target="d1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="legend" value="&lt;b&gt;Steps&lt;/b&gt;&lt;br&gt;&lt;br&gt;1. &lt;b&gt;&lt;font color=&quot;#333333&quot;&gt;IDE / Web UI&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Developer asks Duo for help.&lt;br&gt;&lt;br&gt;2. &lt;b&gt;&lt;font color=&quot;#0A7A4F&quot;&gt;Authorized path&lt;/font&gt;&lt;/b&gt;&lt;br&gt;Self-hosted AI Gateway → customer models.&lt;br&gt;&lt;br&gt;3. &lt;b&gt;&lt;font color=&quot;#B4233C&quot;&gt;Blocked path&lt;/font&gt;&lt;/b&gt;&lt;br&gt;GitLab-managed commercial AI Gateway.&lt;br&gt;&lt;br&gt;4. &lt;b&gt;&lt;font color=&quot;#0B5F8A&quot;&gt;Neighbors&lt;/font&gt;&lt;/b&gt;&lt;br&gt;IdP, PrivateLink, ConMon stay in scope." style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingRight=12;spacingTop=10;spacingBottom=10;fillColor=#F5F5F5;strokeColor=#000000;strokeWidth=2;fontFamily=Helvetica;fontSize=15;" vertex="1" parent="1">
+      <mxGeometry x="1560" y="96" width="320" height="900" as="geometry"/>
+    </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

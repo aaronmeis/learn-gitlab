@@ -596,7 +596,7 @@
           "src": "[S12] [S13]"
         }
       ],
-      "diagram": "assets/diagrams/svg/conceptual.svg",
+      "diagram": "assets/diagrams/01-conceptual.png",
       "framework": {
         "togaf": "Architecture Vision (Phase A) & Business Architecture (Phase B)",
         "dodaf": "OV-1 High-Level Operational Concept, CV-2, DIV-1"
@@ -674,8 +674,8 @@
         }
       ],
       "diagrams": [
-        "assets/diagrams/svg/logical.svg",
-        "assets/diagrams/svg/physical.svg"
+        "assets/diagrams/02-logical.png",
+        "assets/diagrams/03-physical.png"
       ],
       "framework": {
         "togaf": "Information Systems Architectures (Phase C: Data & Application)",
@@ -780,7 +780,7 @@
           "offering": "All"
         }
       ],
-      "diagram": "assets/diagrams/svg/physical.svg",
+      "diagram": "assets/diagrams/03-physical.png",
       "framework": {
         "togaf": "Technology Architecture (Phase D) & Solutions (Phase E)",
         "dodaf": "SV-1/SV-2 Systems Interface, SV-4, DIV-3, StdV-1"
@@ -872,8 +872,8 @@
         }
       ],
       "diagrams": [
-        "assets/diagrams/svg/integration-ai.svg",
-        "assets/diagrams/svg/conceptual.svg"
+        "assets/diagrams/04-integration-ai.png",
+        "assets/diagrams/01-conceptual.png"
       ],
       "framework": {
         "togaf": "Phase C App Interfaces & AI Governance",

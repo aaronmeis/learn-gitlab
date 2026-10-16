@@ -332,7 +332,7 @@
                 <img src="${v.logical.diagrams[0]}" alt="Logical request path">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Logical request path</div>
+                <div class="diagram-card-title">Logical request path (Draw.io)</div>
                 <div class="diagram-card-desc">Front door → Rails → Sidekiq → Postgres → Gitaly → Runner</div>
               </div>
             </div>
@@ -341,7 +341,7 @@
                 <img src="${v.logical.diagrams[1]}" alt="Physical placement">
               </div>
               <div class="diagram-card-info">
-                <div class="diagram-card-title">Where it lands (physical)</div>
+                <div class="diagram-card-title">Physical placement (Draw.io)</div>
                 <div class="diagram-card-desc">Tenant vs outside: IdP, FIPS runners, self-hosted AI Gateway</div>
               </div>
             </div>
