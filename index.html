@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0d1117">
+  <meta name="theme-color" content="#ffffff">
+  <script>(function(){var t='light';try{t=localStorage.getItem('learn_gitlab_theme')||'light';}catch(e){}if(t!=='dark')t='light';document.documentElement.dataset.theme=t;})();</script>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.svg">
@@ -14,6 +15,7 @@
   <meta name="description" content="Architect study console for GitLab DevSecOps: single-tenant GovCloud boundaries, Control Plane vs Job Plane split, and zero-egress self-hosted AI Gateway.">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/enhance.css">
+  <link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -22,7 +24,7 @@
 
   <div class="print-header">
     <div style="font-size:1.25rem;font-weight:800;color:#0f172a">Learn GitLab DevSecOps Platform: Architect Study Console</div>
-    <div style="font-size:.85rem;color:#475569;margin-top:2px">Architecture deep dive · FedRAMP Moderate FR2411959145 · GitLab-grounded sources</div>
+    <div style="font-size:.85rem;color:#475569;margin-top:2px">Architecture deep dive · FedRAMP Moderate (FedRAMP package ID FR2411959145) · GitLab-grounded sources</div>
   </div>
 
   <!-- Mobile Top Bar -->
@@ -31,6 +33,7 @@
       <img src="assets/hero.svg" alt="GitLab Emblem" style="width:30px;height:30px;border-radius:6px;">
       <span class="mobile-title">Learn GitLab DevSecOps</span>
     </div>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch to dark mode">☾</button>
     <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">☰</button>
   </header>
 
@@ -45,6 +48,7 @@
         </div>
       </div>
       <div class="sidebar-sub">DevSecOps Platform Architecture</div>
+      <button type="button" class="theme-toggle theme-toggle-wide" data-theme-toggle aria-label="Switch to dark mode">☾ Dark mode</button>
     </div>
 
     <button type="button" class="nav-search" id="navSearch" aria-label="Search (Ctrl K)">
@@ -95,6 +99,9 @@
         <a class="nav-item" href="#/sources" data-v="sources">
           <span class="ni-ic">🔗</span>Source Ledger
         </a>
+        <a class="nav-item" href="#/backlog" data-v="backlog">
+          <span class="ni-ic">🗂</span>Backlog
+        </a>
       </div>
     </div>
   </nav>
@@ -124,7 +131,7 @@
         <button class="btn btn-sm" onclick="window.EnhanceEngine.closeLightbox()" aria-label="Close modal">✕ Close</button>
       </div>
       <div class="modal-body">
-        <img id="lightbox-img" src="" alt="High-resolution architecture diagram">
+        <img id="lightbox-img" alt="High-resolution architecture diagram">
       </div>
     </div>
   </div>
@@ -141,5 +148,6 @@
       });
     }
   </script>
+  <script src="js/theme.js"></script>
 </body>
 </html>

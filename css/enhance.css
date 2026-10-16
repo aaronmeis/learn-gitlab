@@ -5,8 +5,8 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 1.5rem;
-  background: linear-gradient(135deg, rgba(252, 109, 38, 0.08) 0%, rgba(22, 27, 34, 0.95) 100%);
-  border: 1px solid rgba(252, 109, 38, 0.25);
+  background: linear-gradient(135deg, rgba(255, 212, 0, 0.08) 0%, var(--bg-card) 100%);
+  border: 1px solid rgba(255, 212, 0, 0.25);
   border-radius: var(--radius-lg);
   padding: 1.75rem;
   margin-bottom: 2rem;
@@ -173,7 +173,7 @@
 }
 .drill-bucket.highlight {
   border-color: var(--accent-gitlab);
-  background: rgba(252, 109, 38, 0.05);
+  background: rgba(255, 212, 0, 0.05);
 }
 .drill-bucket-title {
   font-family: var(--font-mono);
@@ -212,7 +212,7 @@
   transform: translateY(-1px);
 }
 .drill-item.selected {
-  background: rgba(252, 109, 38, 0.2);
+  background: rgba(255, 212, 0, 0.2);
   border-color: var(--accent-gitlab);
 }
 
@@ -249,7 +249,7 @@
   font-weight: 800;
   width: 28px;
   height: 28px;
-  background: rgba(252, 109, 38, 0.15);
+  background: rgba(255, 212, 0, 0.15);
   color: var(--accent-gitlab);
   border-radius: var(--radius-sm);
   display: flex;
@@ -597,7 +597,7 @@
 }
 .quiz-option.selected {
   border-color: var(--accent-gitlab);
-  background: rgba(252, 109, 38, 0.1);
+  background: rgba(255, 212, 0, 0.1);
 }
 .quiz-option.correct {
   border-color: var(--accent-emerald) !important;

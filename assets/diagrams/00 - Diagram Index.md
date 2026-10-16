@@ -10,8 +10,6 @@ description: "Diagram index for GitLab DevSecOps Platform Architecture — click
 
 # Diagram Index — GitLab DevSecOps Platform Architecture
 
-**Location:** `(local research pack path)`
-
 Parent: [[../00 - GitLab DevSecOps Platform Architecture Hub|hub]]
 
 > [!info] How to use

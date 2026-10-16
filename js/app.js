@@ -86,7 +86,7 @@
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:.5rem">
             <span class="streak-badge">🔥 ${AppState.streak} Day Study Streak</span>
             <span class="tag-badge gitlab">Console v2.0</span>
-            <span class="tag-badge fedramp">FedRAMP Moderate (FR2411959145)</span>
+            <span class="tag-badge fedramp" title="FedRAMP is the U.S. government cloud security authorization program. Moderate is its middle impact level; FR2411959145 is the marketplace package ID for GitLab Dedicated for Government.">FedRAMP Moderate (FR2411959145)</span>
           </div>
           <h2>Architect Study Console: GitLab DevSecOps</h2>
           <p>
@@ -477,7 +477,7 @@
           6 motion-graphic architecture shorts. No cinematic fluff. Each short owns ONE job: boundaries, control-plane vs job-plane flows, external integrations, and the zero-egress AI path.
         </p>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(340px, 1fr));gap:1.5rem;margin-top:1.5rem;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(340px, 100%), 1fr));gap:1.5rem;margin-top:1.5rem;">
           ${shorts.map((s, idx) => `
             <div class="card" style="display:flex;flex-direction:column;overflow:hidden;padding:0;">
               <div style="background:#000;width:100%;height:320px;display:flex;align-items:center;justify-content:center;">
@@ -532,14 +532,14 @@
           Exhaustive specifications, TOGAF/DoDAF crosswalks, security catalogs, and executive briefings generated from the deep-dive research.
         </p>
 
-        <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;margin-top:1.5rem;">
+        <div class="lib-grid" style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;margin-top:1.5rem;">
           <div style="background:var(--bg-card);border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
             <div style="padding:.75rem 1rem;background:var(--bg-surface);border-bottom:1px solid var(--border-default);font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);">
               Chapters (${chapters.length})
             </div>
             <div style="display:flex;flex-direction:column;max-height:650px;overflow-y:auto;">
               ${chapters.map((ch, idx) => `
-                <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border-muted);cursor:pointer;background:${idx === activeLibraryChapter ? 'rgba(252,109,38,0.12)' : 'transparent'};border-left:3px solid ${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'transparent'};" onclick="window.AppEngine.selectChapter(${idx})">
+                <div style="padding:.85rem 1rem;border-bottom:1px solid var(--border-muted);cursor:pointer;background:${idx === activeLibraryChapter ? 'rgba(255, 212, 0, 0.12)' : 'transparent'};border-left:3px solid ${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'transparent'};" onclick="window.AppEngine.selectChapter(${idx})">
                   <div style="font-weight:600;font-size:.88rem;color:${idx === activeLibraryChapter ? 'var(--accent-gitlab)' : 'var(--text-primary)'};">${ch.title}</div>
                   <div style="font-size:.72rem;color:var(--text-muted);margin-top:2px;">${ch.filename}</div>
                 </div>
@@ -704,6 +704,17 @@
     `;
   }
 
+  function renderBacklog() {
+    const items = [
+      ['Captions for video shorts', 'The six shorts have no caption track yet. Add WebVTT captions so they work with sound off.'],
+      ['Source ledger re-check', 'Re-verify source links and FedRAMP status each quarter; government listings change.'],
+      ['Code legend', 'Codes used across the console: [S#] = source number in the Source Ledger, FM-## = failure mode number, "Rung 200" = difficulty level (100 basic, 200 applied, 300 expert).'],
+      ['Offline video', 'The offline cache stores pages and styles only; videos and slides still need a connection.']
+    ];
+    return `<div class="view-header"><h1>Backlog</h1><p style="color:var(--text-secondary)">Work not finished yet, and notes on the codes used across the console.</p></div>
+      <div style="display:grid;gap:1rem;margin-top:1.5rem;">${items.map(([t,d]) => `<div class="card" style="padding:1rem 1.25rem;border:1px solid var(--border-default);border-radius:var(--radius-md);background:var(--bg-card);"><div style="font-weight:700;margin-bottom:.25rem;">${t}</div><div style="color:var(--text-secondary)">${d}</div></div>`).join('')}</div>`;
+  }
+
   function renderSources(data) {
     return `
       <div>
@@ -791,6 +802,9 @@
         break;
       case 'sources':
         appEl.innerHTML = renderSources(data);
+        break;
+      case 'backlog':
+        appEl.innerHTML = renderBacklog();
         break;
       default:
         appEl.innerHTML = renderToday(data);

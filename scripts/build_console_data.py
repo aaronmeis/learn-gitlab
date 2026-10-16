@@ -5,12 +5,13 @@ Enriches the study console with comprehensive terms, failure modes, quiz bank, a
 """
 
 import json
+import os
 import re
 from pathlib import Path
 
 SITE_ROOT = Path(__file__).resolve().parent.parent
-PACK_TDD = Path(r"(local research pack path)")
-PACK_ODM = Path(r"(local research pack path)")
+PACK_TDD = Path(os.environ.get("LEARN_TDD_PACK", "packs/tech-deep-dive/gitlab"))
+PACK_ODM = Path(os.environ.get("LEARN_ODM_PACK", "packs/one-day-mastery/gitlab"))
 
 def parse_markdown_table(text: str):
     """Simple parser for markdown tables into list of dicts."""
@@ -689,7 +690,7 @@ def build():
     views = load_views()
     
 def load_shorts():
-    topics_file = Path(r"(local output path)")
+    topics_file = Path(os.environ.get("LEARN_SHORTS_TOPICS", "packs/shorts-topics.json"))
     topics = {}
     if topics_file.exists():
         topics = json.loads(topics_file.read_text(encoding="utf-8"))

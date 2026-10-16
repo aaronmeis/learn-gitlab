@@ -406,7 +406,7 @@
           <span class="tag-badge fedramp">${fm.view}</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.75rem;">
+        <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.75rem;">
           <div style="background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.25);padding:.85rem;border-radius:var(--radius-sm);font-size:.84rem;">
             <div style="font-weight:700;color:var(--accent-rose);margin-bottom:3px;">🚨 Bad Tell:</div>
             <div style="color:var(--text-primary);">${fm.bad}</div>

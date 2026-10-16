@@ -29,9 +29,7 @@ Same no-build static pattern as [learn-m365-digital-work](https://github.com/aar
 
 ## Sources of Truth
 
-The Obsidian research packs at:
-- `(local research pack path)`
-- `(local research pack path)`
+The maintainer's private research packs (Tech Deep Dive and One-Day Mastery for GitLab). They are not part of this repo. Set `LEARN_TDD_PACK`, `LEARN_ODM_PACK` and `LEARN_SHORTS_TOPICS` to point the build script at them.
 
 To regenerate `js/data.js` and `data.json` from the vault:
 
