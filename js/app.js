@@ -85,7 +85,7 @@
         <div class="today-text">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:.5rem">
             <span class="streak-badge">🔥 ${AppState.streak} Day Study Streak</span>
-            <span class="tag-badge gitlab">Console v2.0</span>
+            <span class="tag-badge gitlab">ODM · Draw.io</span>
             <span class="tag-badge fedramp" title="FedRAMP is the U.S. government cloud security authorization program. Moderate is its middle impact level; FR2411959145 is the marketplace package ID for GitLab Dedicated for Government.">FedRAMP Moderate (FR2411959145)</span>
           </div>
           <h2>Architect Study Console: GitLab DevSecOps</h2>
@@ -326,25 +326,8 @@
             <span class="rung-badge rung-200">OV-2 · SV-1</span>
           </div>
 
-          <div class="diagram-grid">
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[0]}', 'Logical request path (SV-1)')">
-              <div class="diagram-img-box">
-                <img src="${v.logical.diagrams[0]}" alt="Logical request path">
-              </div>
-              <div class="diagram-card-info">
-                <div class="diagram-card-title">Logical request path (Draw.io)</div>
-                <div class="diagram-card-desc">Front door → Rails → Sidekiq → Postgres → Gitaly → Runner</div>
-              </div>
-            </div>
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagrams[1]}', 'Physical placement (Dedicated for Government)')">
-              <div class="diagram-img-box">
-                <img src="${v.logical.diagrams[1]}" alt="Physical placement">
-              </div>
-              <div class="diagram-card-info">
-                <div class="diagram-card-title">Physical placement (Draw.io)</div>
-                <div class="diagram-card-desc">Tenant vs outside: IdP, FIPS runners, self-hosted AI Gateway</div>
-              </div>
-            </div>
+          <div class="diagram-img-box" style="height:300px;cursor:pointer;" onclick="window.EnhanceEngine.openLightbox('${v.logical.diagram}', 'Logical request path (SV-1)')">
+            <img src="${v.logical.diagram}" alt="Logical request path">
           </div>
 
           <div style="margin-top:1.5rem;">
@@ -418,25 +401,8 @@
             <span class="rung-badge rung-300">Phase C/D · SV-6</span>
           </div>
 
-          <div class="diagram-grid">
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[0]}', 'GitLab Duo AI dual path')">
-              <div class="diagram-img-box">
-                <img src="${v.integration.diagrams[0]}" alt="Duo AI dual path">
-              </div>
-              <div class="diagram-card-info">
-                <div class="diagram-card-title">Dual AI data paths</div>
-                <div class="diagram-card-desc">Self-hosted (authorized) vs commercial gateway (blocked on Gov)</div>
-              </div>
-            </div>
-            <div class="diagram-card" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagrams[1]}', 'Trust domains (conceptual)')">
-              <div class="diagram-img-box">
-                <img src="${v.integration.diagrams[1]}" alt="Trust domains">
-              </div>
-              <div class="diagram-card-info">
-                <div class="diagram-card-title">Trust domains around the platform</div>
-                <div class="diagram-card-desc">Control plane · job plane · unauthorized egress</div>
-              </div>
-            </div>
+          <div class="diagram-img-box" style="height:300px;cursor:pointer;" onclick="window.EnhanceEngine.openLightbox('${v.integration.diagram}', 'GitLab Duo AI dual path')">
+            <img src="${v.integration.diagram}" alt="Duo AI dual path">
           </div>
 
           <div style="margin-top:1.5rem;">
@@ -683,7 +649,7 @@
       <div>
         <h1 class="page-title">Glossary & Terms Ledger</h1>
         <p class="page-subtitle">
-          30+ foundational terms earned across Rungs 100, 200, and 300 with definitions, architectural context, and source citations.
+          43 foundational terms across Rungs 100, 200, and 300, with definitions, architectural context, and source citations.
         </p>
 
         <div style="display:flex;gap:10px;margin-bottom:1.25rem;align-items:center;">
@@ -725,7 +691,7 @@
     const done = [
       ['ODM presentation on Deck', 'YouTube PzEIulYVSrA embedded above the 15-slide ODM deck.'],
       ['Library HTML chapters', 'Deep Dive Library now loads full HTML in the reader pane (no raw markdown dump).'],
-      ['Architecture view SVGs', 'Conceptual / logical / physical / AI views use flat agnostic icon boards.']
+      ['Draw.io architecture views', 'Four house-chrome Draw.io slides (one per view); obsolete Mermaid/hand SVG assets removed.']
     ];
     const codes = [
       ['[S#]', 'Source number in the Source Ledger'],

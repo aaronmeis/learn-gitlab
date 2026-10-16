@@ -673,10 +673,7 @@ window.CONSOLE_DATA = {
           "outputs": "LLM completions"
         }
       ],
-      "diagrams": [
-        "assets/diagrams/02-logical.png",
-        "assets/diagrams/03-physical.png"
-      ],
+      "diagram": "assets/diagrams/02-logical.png",
       "framework": {
         "togaf": "Information Systems Architectures (Phase C: Data & Application)",
         "dodaf": "OV-2 Resource Flow, OV-5b Activity Model, SV-1, DIV-2"
@@ -871,10 +868,7 @@ window.CONSOLE_DATA = {
           "notes": "Zero prompt egress. Model runs inside customer AWS GovCloud account or private VPC."
         }
       ],
-      "diagrams": [
-        "assets/diagrams/04-integration-ai.png",
-        "assets/diagrams/01-conceptual.png"
-      ],
+      "diagram": "assets/diagrams/04-integration-ai.png",
       "framework": {
         "togaf": "Phase C App Interfaces & AI Governance",
         "dodaf": "SV-1/SV-2 external interfaces, SV-6, OV-3, StdV-1"

@@ -1,9 +1,0 @@
-flowchart TB
-  FD["HTTP / SSH front door"] --> APP["Application"]
-  APP --> DB["System of record"]
-  APP --> Q["Job queue"]
-  APP --> GIT["Git RPC"]
-  APP -->|"register job"| W["Job worker"]
-  W --> GIT
-  W --> REG["Artifact registry"]
-  W -->|"findings"| APP
